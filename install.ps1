@@ -122,6 +122,10 @@ foreach ($f in 'piper-read-daemon.py', 'piper-read-say', 'tts-tray.py',
                 'win_hotkeys.py', 'win_ocr.py', 'win_sapi.py', 'tts_previews.py', 'tts_icons.py', 'tts_audio.py') {
     Copy-Item (Join-Path $Repo "bin\$f") (Join-Path $BinDir $f) -Force
 }
+# Version shown in the settings window and the tray tooltip
+if (Test-Path (Join-Path $Repo 'VERSION')) {
+    Copy-Item (Join-Path $Repo 'VERSION') (Join-Path $BinDir 'recito-version.txt') -Force
+}
 # tts-rules: command line for the text rules (for power users and AI assistants).
 # tts_rules.py writes it, the same code the tests check.
 & $Py (Join-Path $BinDir 'tts_rules.py') write-wrapper (Join-Path $BinDir 'tts-rules.cmd') | Out-Null

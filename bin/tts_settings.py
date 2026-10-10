@@ -526,6 +526,7 @@ class Backend(QObject):
             "pause": int(conf.get("pause_sentence", 0) or 0),
             "inprocHotkeys": tts_platform.INPROC_HOTKEYS,
             "linux": tts_platform.IS_LINUX,
+            "version": tts_platform.app_version(),
             "onboarding": needs_onboarding(),
             "readLangs": tts_langs.parse_read_langs(conf.get("read_langs")),
             "systemLangs": tts_langs.system_read_langs(),

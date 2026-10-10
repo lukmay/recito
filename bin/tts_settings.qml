@@ -1407,6 +1407,12 @@ ApplicationWindow {
                 Layout.margins: 16
                 Layout.leftMargin: 40; Layout.rightMargin: 24
                 spacing: 8
+                Small {
+                    visible: !!win.init.version
+                    text: "Recito " + win.init.version
+                    opacity: 0.7
+                    wrapMode: Text.NoWrap
+                }
                 Item { Layout.fillWidth: true }
                 TextButton { text: Tr.t("common.close"); onClicked: win.close() }
                 FilledButton {

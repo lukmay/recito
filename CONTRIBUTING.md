@@ -14,6 +14,18 @@ Tests marked `shells` run the command lines of the AI assistant prompt in every 
 
 Do not add tests that start a real model server or load weights onto the GPU.
 
+## Cutting a release
+
+A release is published by GitHub Actions when `VERSION` changes on `master`.
+
+1. Change `VERSION` to the new number, for example `1.1.0` (a plain `MAJOR.MINOR.PATCH`; a suffix such as `-rc1` makes it a pre-release).
+2. Add a `## 1.1.0` section to `CHANGELOG.md` that tells users what changed. It is put at the top of the release notes, below the install steps; GitHub adds the list of merged changes after it.
+3. Commit and push to `master`.
+
+`.github/workflows/release.yml` runs the tests and ruff, creates the tag `v1.1.0` on that commit if it does not exist, and attaches `Recito-1.1.0-windows.zip`, `Recito-1.1.0-linux.tar.gz` and `SHA256SUMS.txt`. The archives are built from the commit with `git archive`, so only committed files are in them, and tests, CI files, icon sources and screenshots are left out.
+
+To build the same assets locally, run `python tools/build_release.py 1.1.0 dist`. To rebuild the assets of a release that exists, run the workflow by hand from the Actions tab; it replaces the attached files of the tag of `VERSION`. A push that changes `VERSION` but finds the release already published does nothing.
+
 ## Code style
 
 The app was called TTS-Vorlesen before it became Recito. The internal names `%APPDATA%\piper`, `piper-bin`, `piper-venv`, `tts-neural`, the keys in `voices.conf` and the module file names are historical names and stay as they are, so that installed setups keep working.

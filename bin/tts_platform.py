@@ -107,6 +107,20 @@ def conf_path() -> Path:
     return piper_dir() / "voices.conf"
 
 
+def app_version() -> str:
+    """Version of the installed app: recito-version.txt beside the modules
+    (written by the install scripts), or VERSION at the root of a checkout."""
+    here = Path(__file__).resolve().parent
+    for f in (here / "recito-version.txt", here.parent / "VERSION"):
+        try:
+            v = f.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        if v:
+            return v
+    return ""
+
+
 def conf_read() -> dict:
     return tts_config.read(conf_path())
 

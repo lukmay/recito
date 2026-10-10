@@ -1,0 +1,83 @@
+name: release
+
+# Publishes a GitHub release when VERSION changes on master. Run it by hand to
+# build the release of the current VERSION, also when its tag already exists.
+on:
+  push:
+    branches: [master]
+    paths: [VERSION]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit or tag to build from (default: the tag of VERSION if it exists, else this branch)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  release:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # actions/checkout v4, pinned to a commit
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      # actions/setup-python v5, pinned to a commit
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+
+      - name: Read the version
+        id: v
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build the assets
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          REF: ${{ inputs.ref }}
+        run: |
+          args=()
+          if [ -n "$REF" ]; then args+=(--ref "$REF"); fi
+          python tools/build_release.py "$VERSION" dist --notes release-notes.md "${args[@]}"
+          ls -l dist
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.v.outputs.tag }}
+          VERSION: ${{ steps.v.outputs.version }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            if [ "$EVENT" != "workflow_dispatch" ]; then
+              echo "::notice::Release $TAG already exists, nothing to do."
+              exit 0
+            fi
+            gh release upload "$TAG" dist/* --clobber
+            echo "::notice::Replaced the assets of the existing release $TAG."
+            exit 0
+          fi
+          # Without an existing tag, gh creates it on the current commit.
+          prerelease=()
+          case "$VERSION" in *-*) prerelease+=(--prerelease) ;; esac
+          gh release create "$TAG" dist/* \
+            --target "$GITHUB_SHA" \
+            --title "Recito $VERSION" \
+            --notes-file release-notes.md \
+            --generate-notes \
+            "${prerelease[@]}"

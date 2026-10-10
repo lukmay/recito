@@ -218,7 +218,7 @@ class Tray:
         if key != self._icon_key:
             self._icon_key = key
             self.tray.setIcon(tts_icons.tray_icon(*key))
-        tip = tr("tray.tooltip")
+        tip = f"{tr('tray.tooltip')} {tts_platform.app_version()}".strip()
         if self.state != "idle":
             tip += "\n" + tr(f"tray.state.{self.state}")
         self.tray.setToolTip(tip)

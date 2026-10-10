@@ -56,14 +56,32 @@ Recito reads the text you select in any app. Press a hotkey and the first senten
 
 ## Quick start
 
-Get the code first:
+### Download the latest release
+
+Go to the [latest release](https://github.com/lukmay/recito/releases/latest) and download the file for your system. No git is needed.
+
+Windows 11 (Python 3.12 or 3.13, 64-bit): download `Recito-<version>-windows.zip`, extract it and double-click `Install Recito.cmd`. The window stays open at the end so you can read the result.
+
+Fedora KDE Plasma 6: download `Recito-<version>-linux.tar.gz`, then:
+
+```bash
+tar xzf Recito-<version>-linux.tar.gz
+cd Recito-<version>-linux
+./install.sh
+```
+
+To update, install the newer release over the old one. `SHA256SUMS.txt` on the release page lets you check the downloads. The release lists what changed; see also [CHANGELOG.md](CHANGELOG.md).
+
+### From the repository
+
+Use this to work on the code. Get it first:
 
 ```bash
 git clone https://github.com/lukmay/recito.git
 cd recito
 ```
 
-Windows 11 (Python 3.12 or 3.13, 64-bit):
+The install scripts are the same ones the release contains. Windows 11:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
@@ -249,9 +267,11 @@ assets/icons/           icons generated from assets/brand (committed)
 docs/images/            README images, built by tools/make_screenshots.py
 neural/                 model servers, launcher, benchmarks
 scripts/                hotkey wrappers for Linux
-tools/                  icon build, icon install and screenshot scripts
+tools/                  icon build, icon install, screenshot and release build scripts
 keyd/, kde/, systemd/   Linux integration
 config/voices.conf      configuration template
+VERSION                 the version; changing it publishes a release
+CHANGELOG.md            what changed in each release
 tests/                  pytest suite
 ```
 
@@ -294,4 +314,4 @@ Piper voices speak one language each. Kokoro reads only German and English here,
 
 ## Licenses
 
-The project license is not chosen yet. Models, voices and the bundled icon font have their own licenses, listed in [THIRD_PARTY.md](THIRD_PARTY.md).
+Recito is licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0-or-later). Models, voices and the bundled icon font have their own licenses, listed in [THIRD_PARTY.md](THIRD_PARTY.md).
