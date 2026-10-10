@@ -9,7 +9,7 @@ then opens the new document; autoplay is allowed here.
 
 Login: Google sign-in does not work in embedded browsers ("This browser or app
 may not be secure"), so the session is taken over once from the regular
-browser. A bookmarklet ("Mit TTS verbinden"), clicked on elevenreader.io,
+browser. A bookmarklet ("Mit Recito verbinden"), clicked on elevenreader.io,
 copies the page's Firebase user to the clipboard. The tray detects it, stores
 it (session.json, readable by the user only), clears the clipboard and puts it
 into this window's IndexedDB. The page's Firebase library then signs in by
@@ -150,12 +150,12 @@ _BOOKMARKLET = (
     "elevenreader.io öffnen und dort angemeldet sein.');location.href='" + HOME_URL + "';return;}"
     + _FIND_AUTH_JS +
     "const give=(t,ok)=>navigator.clipboard.writeText(t).then(()=>alert(ok),"
-    "()=>prompt('Mit Strg+C kopieren, dann Enter. Die TTS-App übernimmt den Rest von selbst.',t));"
+    "()=>prompt('Mit Strg+C kopieren, dann Enter. Recito übernimmt den Rest von selbst.',t));"
     "const a=await ttsFindAuth();"
     "if(a){give('" + SESSION_PREFIX + "'+btoa(unescape(encodeURIComponent(JSON.stringify(a)))),"
-    "'Verbunden. Die TTS-App übernimmt die Anmeldung jetzt.');return;}"
+    "'Verbunden. Recito übernimmt die Anmeldung jetzt.');return;}"
     "const d=await ttsDiag();give('" + DIAG_PREFIX + "'+btoa(unescape(encodeURIComponent(JSON.stringify(d)))),"
-    "'Anmeldung nicht gefunden. Eine Diagnose (nur Namen, keine Inhalte) ist kopiert, die TTS-App speichert sie.');"
+    "'Anmeldung nicht gefunden. Eine Diagnose (nur Namen, keine Inhalte) ist kopiert, Recito speichert sie.');"
     "})();"
 )
 
@@ -173,16 +173,16 @@ a{color:#4355B9}small{color:#46464F}
 @media (prefers-color-scheme:dark){body{background:#131318;color:#E4E1E9}p,small{color:#C6C5D0}
 li:before,a.bm{background:#BAC3FF;color:#08218A}a{color:#BAC3FF}}
 </style></head><body><main>
-<h1>ElevenReader mit TTS-Vorlesen verbinden</h1>
+<h1>ElevenReader mit Recito verbinden</h1>
 <p>Einmalig nötig. Google erlaubt keine Anmeldung in eingebetteten Fenstern, deshalb übernimmt
 die App deine Anmeldung aus diesem Browser.</p>
 <ol>
 <li><div><b>Diesen Button in die Lesezeichenleiste ziehen</b><br>
 <small>Leiste einblenden: Strg+Shift+B</small><br>
-<a class="bm" href="%(bm)s">Mit TTS verbinden</a></div></li>
+<a class="bm" href="%(bm)s">Mit Recito verbinden</a></div></li>
 <li><div><b><a href="%(home)s">elevenreader.io öffnen</a></b> und prüfen, dass du angemeldet bist.</div></li>
 <li><div><b>Dort auf das Lesezeichen klicken.</b><br>
-<small>Die TTS-App meldet sich mit „ElevenReader verbunden“. Danach kannst du das Lesezeichen
+<small>Recito meldet sich mit „ElevenReader verbunden“. Danach kannst du das Lesezeichen
 wieder löschen.</small></div></li>
 </ol></main></body></html>"""
 

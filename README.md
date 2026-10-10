@@ -1,34 +1,75 @@
-# tts-setup
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-lockup-dark.svg">
+    <img src="assets/brand/logo-lockup.svg" alt="Recito" height="72">
+  </picture>
+</p>
 
-A desktop app that reads selected text aloud. Press a hotkey and the daemon reads the current selection, or draw a rectangle on the screen and it reads the text recognized in it (OCR). It runs on Windows 11 and on Fedora KDE Plasma 6 (Wayland).
+<h3 align="center">Select text. Press a key. Listen.</h3>
 
-The app has two parts. A tray app holds the settings window, the hotkeys and the tray menu. A daemon keeps the voices loaded, splits text into sentences and streams audio sentence by sentence, so the first sentence plays while the rest is still being synthesized.
+<p align="center">
+Local and private or online, in your own voice, in 13 languages.<br>
+For Windows 11 and Fedora KDE Plasma 6.
+</p>
 
-## Engines
+https://github.com/user-attachments/assets/2f2886c4-ca6d-4cb7-ad32-8ed2e68c6dd7
 
-| Engine | `engine=` | Runs | Notes |
-|---|---|---|---|
-| Piper | `piper` | local, CPU | Always loaded; reads any sentence another engine fails on |
-| Edge-TTS | `edge` | online | Microsoft neural voices, needs ffmpeg |
-| ElevenLabs | `elevenlabs` | online | Paid per character, API key from the user |
-| SAPI5 | `sapi` | local | Windows voices, Windows only |
-| MS Speech Platform | `mssp` | local | Via balcon under Wine, Linux only, see `linux-mssp/` |
-| Kokoro | `kokoro2` | local, GPU or CPU | German and English voices, model server, see [neural/kokoro2/README.md](neural/kokoro2/README.md) |
-| Local neural models | `qwen3`, `chatterbox`, `fish`, `stepaudio` | local, GPU | Separate model servers, see [neural/README.md](neural/README.md) |
+Recito reads the text you select in any app. Press a hotkey and the first sentence plays while the rest is still being synthesized. Draw a rectangle on the screen and Recito reads the text it recognizes there (OCR).
 
-If the chosen engine fails for a sentence, Piper reads that sentence. With `fallback=off` in `voices.conf` the daemon skips the sentence instead, so the voice never changes mid-text.
+## Why Recito
 
-Older versions had a second Kokoro engine on kokoro-onnx under `engine=kokoro`. The daemon reads that setting as `kokoro2` when the Kokoro model server is installed and as `piper` otherwise.
+**It stays on your computer when you want it to.** Piper, Kokoro and the neural models run locally and need no internet. Edge-TTS and ElevenLabs are online choices, and Piper reads any sentence they fail on.
 
-## Install
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/onboarding-engine-dark.webp">
+    <img src="docs/images/onboarding-engine-light.webp" alt="Setup step that recommends an engine for the detected hardware" width="720">
+  </picture>
+</p>
 
-Windows (Python 3.12 or 3.13, 64-bit):
+**It reads in your own voice.** Record 10 to 15 seconds, or import a file, and the cloning engines Chatterbox and Fish Audio speak with that voice.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/new-voice-dark.webp">
+    <img src="docs/images/new-voice-light.webp" alt="Dialog for creating a voice from a recording" width="720">
+  </picture>
+</p>
+
+**It speaks the language of the text.** Pick the languages you read, out of 13, and Recito detects the language of each text or sentence and switches the voice.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/languages-dark.webp">
+    <img src="docs/images/languages-light.webp" alt="Chips for the 13 reading languages" width="720">
+  </picture>
+</p>
+
+**It reads notes and formulas cleanly.** Rules remove Markdown and Obsidian marks and turn LaTeX into words, so `**SQL**` is read as "SQL" and no asterisk is spoken. Every rule can be edited, and you can add your own.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/rules-dark.webp">
+    <img src="docs/images/rules-light.webp" alt="Text clean-up page with rule groups and a Try it box showing a text before and after" width="720">
+  </picture>
+</p>
+
+## Quick start
+
+Get the code first:
+
+```bash
+git clone https://github.com/lukmay/recito.git
+cd recito
+```
+
+Windows 11 (Python 3.12 or 3.13, 64-bit):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-The script creates a venv in `%LOCALAPPDATA%\piper-venv`, copies the program to `%LOCALAPPDATA%\piper-bin`, downloads the default Piper voices, writes `%APPDATA%\piper\voices.conf`, enables autostart and starts the tray app. The tray app starts the daemon itself. Details are in [WINDOWS.md](WINDOWS.md).
+The script creates a venv in `%LOCALAPPDATA%\piper-venv`, copies the program to `%LOCALAPPDATA%\piper-bin`, downloads the default Piper voices, writes `%APPDATA%\piper\voices.conf`, enables autostart and starts the tray app. Details are in [WINDOWS.md](WINDOWS.md).
 
 Fedora KDE Plasma 6:
 
@@ -36,11 +77,20 @@ Fedora KDE Plasma 6:
 ./install.sh
 ```
 
-The script installs the system packages (with sudo), creates `~/.local/share/piper-venv`, downloads the voices, installs the daemon as the systemd user service `piper-read`, registers the KDE shortcuts and builds [keyd](https://github.com/rvaiya/keyd) for the AltGr hotkeys. Log out and back in once afterwards. `./uninstall.sh` removes the setup; `--purge` also deletes voices and the venv.
+The script installs the system packages (with sudo), creates `~/.local/share/piper-venv` and downloads the voices. It installs the daemon as the systemd user service `piper-read`, registers the KDE shortcuts and builds [keyd](https://github.com/rvaiya/keyd) for the AltGr hotkeys. Log out and back in once afterwards. `./uninstall.sh` removes the setup, and `--purge` also deletes voices and the venv.
 
-Both scripts are idempotent. Run them again after changing files in `bin/`, `scripts/` or `neural/`.
+Both scripts are idempotent. Run them again after changing files in `bin/`, `scripts/` or `neural/`. A setup assistant opens on the first start and walks through languages, engine, voice, speed and shortcuts.
 
-The local neural models are optional and installed one by one, see [neural/README.md](neural/README.md).
+Recito was called TTS-Vorlesen before. Running the install script again removes the old autostart entry, Start menu shortcut, launchers, KDE shortcut bindings and icons. Settings in `%APPDATA%\piper` or `~/.local/share/piper` stay as they are.
+
+The tray icon shows one of four states, idle, speaking, paused or error.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/tray-dark.webp">
+    <img src="docs/images/tray-light.webp" alt="The four tray icon states" width="560">
+  </picture>
+</p>
 
 ## Usage
 
@@ -55,15 +105,51 @@ Default hotkeys on Windows (changeable in the settings window):
 
 On Linux keyd maps AltGr combinations to shortcuts that KDE can bind: `AltGr+P` reads the selection, `AltGr+O` reads a screen region, `AltGr+Shift` makes either faster and `AltGr+L` pauses. Two mouse side buttons read the selection and start OCR. keyd matches the mouse by its USB ID in `keyd/default.conf`; replace the example ID with your own (`sudo keyd monitor` shows it).
 
-With the voice set to `auto`, the daemon detects the language with [lingua](https://github.com/pemistahl/lingua-py) and picks the voice of that language, either once per text (`lang_detect=text`) or per sentence (`lang_detect=sentence`).
+Left-click the tray icon to open the settings window, right-click for the menu. The window chooses engine and voices, previews each voice, sets speed and pauses, records hotkeys and creates reference voices for the cloning models.
 
-Left-click the tray icon to open the settings window; right-click for the menu. The settings window chooses engine and voices, previews each voice, sets speed and pauses, records hotkeys and creates reference voices for the cloning models.
+## Engines
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/voice-dark.webp">
+    <img src="docs/images/voice-light.webp" alt="Voice and engine page with one card per engine" width="720">
+  </picture>
+</p>
+
+| Engine | `engine=` | Runs | GPU | Voice cloning | Notes |
+|---|---|---|---|---|---|
+| Piper | `piper` | local | CPU only | no | Always loaded, reads any sentence another engine fails on |
+| Kokoro | `kokoro2` | local | optional, about 1.1 GB VRAM | no | German and English, first audio after about 0.1 s |
+| Chatterbox | `chatterbox` | local | NVIDIA, about 5.2 GB VRAM | yes | Sounds the most natural in listening tests |
+| Qwen3-TTS | `qwen3` | local | NVIDIA, about 5.3 GB VRAM | no | Follows style instructions in words |
+| Fish Audio S2 Pro | `fish` | local | NVIDIA, about 9.8 GB VRAM | yes | Above the default VRAM budget |
+| Step-Audio-EditX | `stepaudio` | local | NVIDIA, about 8.6 GB VRAM | no | About 20 times slower than real time |
+| Edge-TTS | `edge` | online | none | no | Microsoft neural voices, free, needs ffmpeg |
+| ElevenLabs | `elevenlabs` | online | none | no | Paid per character, API key from the user |
+| SAPI5 | `sapi` | local | none | no | Windows voices, Windows only |
+| MS Speech Platform | `mssp` | local | none | no | Via balcon under Wine, Linux only, see `linux-mssp/` |
+
+The neural models are optional, installed one by one and run as separate model servers. [neural/README.md](neural/README.md) has measurements, the VRAM budget and the setup steps; [neural/kokoro2/README.md](neural/kokoro2/README.md) covers Kokoro. The setup assistant checks your hardware and recommends an engine.
+
+If the chosen engine fails for a sentence, Piper reads that sentence. With `fallback=off` in `voices.conf` the daemon skips the sentence instead, so the voice never changes mid-text. The daemon reads the former `engine=kokoro` (kokoro-onnx) as `kokoro2` when the Kokoro model server is installed and as `piper` otherwise.
+
+## Features
+
+**Text clean-up rules.** One list of rules, in four groups, runs from top to bottom before a text is read. See [Text clean-up and rules](#text-clean-up-and-rules).
+
+**AI assistant command line.** The `tts-rules` command validates, tests and undoes rule changes. Assistants such as Claude Code or Codex can manage rules through it, and a button in the settings window copies a ready prompt.
+
+**13 reading languages.** German, English, French, Spanish, Italian, Dutch, Portuguese, Polish, Swedish, Danish, Czech, Russian and Turkish. See [Languages](#languages).
+
+**Setup assistant.** It detects the hardware, recommends an engine, plays sample voices and records your shortcuts.
+
+**Speed and loudness.** Every engine reaches the same pace, and the daemon normalizes loudness to -18 LUFS. See [Speed and loudness](#speed-and-loudness).
 
 ## Languages
 
-The reading languages are the languages your texts are in. You pick them in the setup assistant or under Voice & engine, and `voices.conf` stores them in order, for example `read_langs=de,en,fr`. Without that line the app uses `de,en`, so older configurations behave as before. The app offers German, English, French, Spanish, Italian, Dutch, Portuguese, Polish, Swedish, Danish, Czech, Russian and Turkish. Language detection only chooses among the reading languages, so a French text is never read as Dutch when you do not read Dutch.
+The reading languages are the languages your texts are in. You pick them in the setup assistant or under Voice & engine, and `voices.conf` stores them in order, for example `read_langs=de,en,fr`. Without that line the app uses `de,en`. With the voice set to `auto`, the daemon detects the language with [lingua](https://github.com/pemistahl/lingua-py), either once per text (`lang_detect=text`) or per sentence (`lang_detect=sentence`). Detection only chooses among the reading languages, so a French text is never read as Dutch when you do not read Dutch.
 
-Each reading language has its own voice per engine: `<lang>=<onnx name>` for Piper (`fr=fr_FR-siwis-medium`) and `<engine>_<lang>` for the others (`edge_fr`, `chatterbox_fr`). The existing keys `de=`, `en=`, `edge_de` or `chatterbox_de` keep their meaning.
+Each reading language has its own voice per engine: `<lang>=<onnx name>` for Piper (`fr=fr_FR-siwis-medium`) and `<engine>_<lang>` for the others (`edge_fr`, `chatterbox_fr`).
 
 | Engine | Reading languages |
 |---|---|
@@ -74,23 +160,23 @@ Each reading language has its own voice per engine: `<lang>=<onnx name>` for Pip
 | Kokoro, Step-Audio-EditX | German and English |
 | Windows voices, MS Speech Platform | the languages of the installed voices |
 
-Engine cards in the settings window show how many of your reading languages an engine speaks. When a sentence is in a language the engine lacks, the daemon reads it with the Piper voice of that language. If Piper has no voice for it, Edge reads it with its default voice of that language, which needs the internet. With `engine=piper` the daemon stays offline and uses the default Piper voice instead. An Edge failure turns the Edge step off for the rest of the text.
+Engine cards show how many of your reading languages an engine speaks. When a sentence is in a language the engine lacks, the daemon reads it with the Piper voice of that language. If Piper has no voice for it, Edge reads it with its default voice, which needs the internet. With `engine=piper` the daemon stays offline and uses the default Piper voice. An Edge failure turns the Edge step off for the rest of the text.
 
-For each reading language without a Piper voice, the settings window and the setup assistant offer one chosen voice (about 63 MB) from the [Piper voice collection](https://huggingface.co/rhasspy/piper-voices). The download runs in the background with a progress bar, lands in the `voices.conf` folder and is used from the next start of the daemon.
+For each reading language without a Piper voice, the settings window and the setup assistant offer one voice (about 63 MB) from the [Piper voice collection](https://huggingface.co/rhasspy/piper-voices). The download runs in the background and is used from the next start of the daemon.
 
-The app language is separate from the reading languages. The settings window, the tray menu and the setup assistant come in English, German, French, Spanish and Italian; [bin/i18n/README.md](bin/i18n/README.md) explains how to add one.
+The app language is separate. The settings window, the tray menu and the setup assistant come in English, German, French, Spanish and Italian; [bin/i18n/README.md](bin/i18n/README.md) explains how to add one.
 
 ## Configuration
 
 All settings live in `voices.conf`: `%APPDATA%\piper\voices.conf` on Windows, `~/.local/share/piper/voices.conf` on Linux. The environment variable `PIPER_DIR` moves this folder. [config/voices.conf](config/voices.conf) is the commented template.
 
-The ElevenLabs API key is never stored in `voices.conf`. The settings window writes it to `elevenlabs.key` in the same folder; the environment variable `ELEVENLABS_API_KEY` overrides it.
+The ElevenLabs API key is never stored in `voices.conf`. The settings window writes it to `elevenlabs.key` in the same folder, and the environment variable `ELEVENLABS_API_KEY` overrides it.
 
 ## Speed and loudness
 
-Speed is a pace factor: 1.25 reads a text in 1/1.25 of the time. `voices.conf` stores it as a length scale (`speed_normal`, `speed_fast`; 0.8 means pace 1.25). Every engine reaches the same pace. Edge-TTS, Kokoro and Step-Audio-EditX render the pace themselves; SAPI5 and the MS Speech Platform render it in steps of their rate scale; ElevenLabs renders 0.7 to 1.2 on models with speed control. The daemon time-stretches whatever an engine does not render, with the pitch kept. Piper is always time-stretched, because its `length_scale` changes the duration less than requested (0.67 gave 0.78 to 0.82 of the duration in a measurement).
+Speed is a pace factor, so 1.25 reads a text in 1/1.25 of the time. `voices.conf` stores it as a length scale (`speed_normal`, `speed_fast`), where 0.8 means pace 1.25. Every engine reaches the same pace. Edge-TTS, Kokoro and Step-Audio-EditX render the pace themselves. SAPI5 and the MS Speech Platform render it in steps of their rate scale, and ElevenLabs renders 0.7 to 1.2 on models with speed control. The daemon time-stretches whatever an engine does not render and keeps the pitch. Piper is always time-stretched, because its `length_scale` changes the duration less than requested (0.67 gave 0.78 to 0.82 of the duration in a measurement).
 
-The daemon also normalizes the loudness of every engine and voice to -18 LUFS (ITU-R BS.1770), so a quiet English clone and a loud German one play at the same level. It measures each voice from its first audio, keeps a slow running estimate per engine and voice, and limits peaks to -1 dBFS. The estimates are kept in `%LOCALAPPDATA%\tts-audio\loudness.json` or `~/.cache/tts-audio/loudness.json`, so a known voice starts at the right level; deleting the file is safe. Two keys in `voices.conf` control it:
+The daemon also normalizes the loudness of every engine and voice to -18 LUFS (ITU-R BS.1770). A quiet English clone and a loud German one then play at the same level. It measures each voice from its first audio and keeps a slow running estimate per engine and voice. Peaks stay below -1 dBFS. The estimates live in `%LOCALAPPDATA%\tts-audio\loudness.json` or `~/.cache/tts-audio/loudness.json`, so a known voice starts at the right level. Deleting the file is safe. Two keys in `voices.conf` control the normalization.
 
 ```
 loudness_norm=on         # off plays every engine at its own level
@@ -105,14 +191,14 @@ Before the app reads a text aloud, it runs the text through one list of rules, f
 
 The list is split into four groups, which run in this order:
 
-| Group | What its rules do | On in a new setup |
+| Group | What its rules do | On in a fresh setup |
 |---|---|---|
 | Obsidian | Remove Obsidian syntax: `[[Page\|Name]]` links, `![[embeds]]`, tags, callouts, block IDs, `%%` comments, `==highlights==` | no |
 | Markdown | Remove Markdown marks (`**`, `#`, `>`, list bullets, table pipes, code fences, HTML tags, footnote marks), read links as their text and web addresses as the site name, and read formulas between `$` signs | yes |
 | Formulas | Read copied LaTeX and math symbols, for example from Readest, as German words | yes |
 | Your rules | Your own rules | yes |
 
-The rules in the first three groups are presets: they come with the app and serve as examples and starting points. You can change, move, switch off and delete them like your own rules. "Restore presets" adds deleted presets back and resets changed ones; "Reset to original" does the same for one rule, and a group whose rules you deleted offers to add them back. Each group also has its own switch, which turns all its rules off at once and keeps the switches of the single rules. Most presets are regular expressions. Two of them run program code, because a regular expression cannot turn a formula into words: "Formulas between $ signs" and "LaTeX and math symbols". They show the label "Built in" and can be switched, moved or deleted, but not edited.
+The rules in the first three groups are presets. They come with the app and serve as examples and starting points, and you can change, move, switch off and delete them like your own rules. "Restore presets" adds deleted presets back and resets changed ones. "Reset to original" does the same for one rule, and a group whose rules you deleted offers to add them back. Each group also has its own switch, which turns all its rules off at once and keeps the switches of the single rules. Most presets are regular expressions. Two run program code, because a regular expression cannot turn a formula into words. These are "Formulas between $ signs" and "LaTeX and math symbols". They show the label "Built in" and can be switched, moved or deleted, but not edited.
 
 You manage the list in the settings window under Text clean-up. The groups start closed and show how many of their rules are on. A box at the end of the page tries the whole list on any text and names the rules that changed it. Changes apply to the next text you read, without a restart.
 
@@ -129,29 +215,19 @@ tts-rules restore --all             # deleted presets back, changed ones reset
 tts-rules undo
 ```
 
-New rules go to the end of your own rules unless `--group` names another group. `tts-rules doctor` checks that the tool runs in the current shell and shows which rules file it uses. `tts-rules --help` lists every command. With `--json` the output is machine-readable, and the exit codes are 0 (ok), 1 (invalid rule), 2 (bad arguments), 3 (rule not found), 4 (rules file busy or unreadable) and 5 (the shell changed non-ASCII text on the way in).
+New rules go to the end of your own rules unless `--group` names another group. `tts-rules doctor` checks that the tool runs in the current shell and shows which rules file it uses, and `tts-rules --help` lists every command. With `--json` the output is machine-readable. The exit codes are 0 (ok), 1 (invalid rule), 2 (bad arguments), 3 (rule not found) and 4 (rules file busy or unreadable). Code 5 means the shell changed non-ASCII text on the way in.
 
 The install scripts create `tts-rules` in `~/.local/bin` on Linux and `tts-rules.cmd` in `%LOCALAPPDATA%\piper-bin` on Windows; `python bin/tts_rules.py` works from the repository. On Windows the `.cmd` wrapper runs through cmd.exe, which treats `|`, `&`, `^` and `%` in arguments as its own syntax. For patterns with these characters, call Python directly from PowerShell, as the instructions for AI assistants do.
 
-AI coding assistants such as Claude Code or Codex can manage rules too. The button "Instructions for an AI assistant" on the Text clean-up page copies a prompt with the exact command for your computer, the groups, the rule format, examples and safety steps; `tts-rules prompt` prints the same text. The prompt tells the assistant to add its rules to your own rules and to leave presets alone unless you ask. Rules an assistant adds or changes carry a badge in the window until you review them.
+AI coding assistants such as Claude Code or Codex can manage rules too. The button "Instructions for an AI assistant" on the Text clean-up page copies a prompt. It contains the exact command for your computer, the groups, the rule format, examples and safety steps. `tts-rules prompt` prints the same text. The prompt tells the assistant to add its rules to your own rules and to leave presets alone unless you ask. Rules an assistant adds or changes carry a badge in the window until you review them.
 
 ### Upgrading from the filters= setting
 
-Older versions had two built-in filters, switched on with `filters=` in `voices.conf`, and kept your own replacements in `replace.conf`. The app, the daemon and `tts-rules` set up the list once, the first time they run, so that reading sounds as before:
+Older versions had two built-in filters, switched on with `filters=` in `voices.conf`, and kept replacements in `replace.conf`. The app, the daemon and `tts-rules` convert both into the rules list once, the first time they run, so reading sounds as before. A `filters=obsidian,latex` line turns all three preset groups on, `filters=obsidian` turns Obsidian and Markdown on, and `filters=latex` turns Formulas on. An empty line turns all three off, and a setup without the line gets Markdown and Formulas. The presets go in front of the rules already in `rules.json`, and `replace.conf` rules follow in their old order. The file is renamed to `replace.conf.migrated`. The previous `rules.json` stays as `rules.json.bak`, so `tts-rules undo` returns to it. After this step the app no longer reads `filters=`, and the line can be deleted.
 
-| Former `filters=` line | Obsidian | Markdown | Formulas |
-|---|---|---|---|
-| `filters=obsidian,latex` | on | on | on |
-| `filters=obsidian` | on | on | off |
-| `filters=latex` | off | off | on |
-| `filters=` (empty) | off | off | off |
-| no `filters=` line (new setup) | off | on | on |
+The presets differ on purpose from the old filter where it read syntax aloud. Embeds, callout markers, tags, block IDs, `%%` comments, highlights, front matter, tables, bare web addresses, HTML tags, footnote marks, task boxes and nested quotes are removed or shortened. Prices such as `$5 and $10` are no longer read as a formula. `tests/golden_corpus.py` lists these cases with the old and the new result.
 
-The presets go in front of the rules already in `rules.json`. Rules from `replace.conf` are imported after them, in their old order, and the file is renamed to `replace.conf.migrated`; they are switched on only if `replace` was in `filters=`. If `replace` stood before a filter, as in `filters=latex,replace,obsidian`, your rules stay in front of the groups that came after it. The previous `rules.json` stays as `rules.json.bak`, so `tts-rules undo` returns to it. After this step the app no longer reads `filters=`, and the settings window no longer writes it; the line can be deleted.
-
-The presets read most notes as the old `obsidian` filter did. They differ on purpose where the old filter read syntax aloud: embeds, callout markers, tags, block IDs, `%%` comments, highlights, front matter, tables, bare web addresses, HTML tags, footnote marks, task boxes and nested quotes are now removed or shortened. Prices such as `$5 and $10` are no longer read as a formula. `tests/golden_corpus.py` lists these cases with the old and the new result.
-
-For changes a rule cannot express, a `tts_filters.py` in the config folder can define functions `text -> text` in a `FILTERS` dict. `tts-rules add-code <name>` adds one of them to the list as a code rule. Names from a former `filters=` line become such code rules during the upgrade.
+For changes a rule cannot express, a `tts_filters.py` in the config folder can define functions `text -> text` in a `FILTERS` dict. `tts-rules add-code <name>` adds one of them to the list as a code rule.
 
 ## Repository layout
 
@@ -170,9 +246,10 @@ bin/                    daemon, client, tray app and their modules
   tts_icons.py          app, window and tray icons
 assets/brand/           logo and icon sources (SVG), see BRAND.md
 assets/icons/           icons generated from assets/brand (committed)
+docs/images/            README images, built by tools/make_screenshots.py
 neural/                 model servers, launcher, benchmarks
 scripts/                hotkey wrappers for Linux
-tools/                  icon build and icon install scripts
+tools/                  icon build, icon install and screenshot scripts
 keyd/, kde/, systemd/   Linux integration
 config/voices.conf      configuration template
 tests/                  pytest suite
@@ -188,9 +265,11 @@ python -m pytest
 ruff check .
 ```
 
-`python -m pytest -m "not shells"` skips the tests that run the AI assistant commands in real shells (PowerShell, Git Bash, cmd.exe, bash, zsh, fish and WSL); they take about half a minute and skip shells that are not installed.
+`python -m pytest -m "not shells"` skips the tests that run the AI assistant commands in real shells (PowerShell, Git Bash, cmd.exe, bash, zsh, fish and WSL). They take about half a minute and skip shells that are not installed.
 
 The tests redirect every config and data folder into a temporary directory, so they never touch an installed setup. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to add an engine.
+
+The README images in `docs/images/` come from `python tools/make_screenshots.py`, which opens the settings window offscreen with a throwaway config folder and frames each grab. Run it with the interpreter of the app venv.
 
 The icons in `assets/icons/` are generated from the SVG files in `assets/brand/`. After you change a file in `assets/brand/`, rebuild the icons with PySide6 installed and commit the result:
 
@@ -205,7 +284,7 @@ python tools/build_icons.py --check   # exits with 1 if assets/icons is out of d
 |---|---|
 | No sound (Linux) | `systemctl --user status piper-read`, `journalctl --user -u piper-read -n 40`, `echo Test \| ~/.local/bin/piper-read-say de --stdin` |
 | No sound (Windows) | `%APPDATA%\piper\daemon.log` |
-| Hotkey does nothing (Linux) | `sudo keyd monitor` shows whether keyd sees the key; log out and in after installing |
+| Hotkey does nothing (Linux) | `sudo keyd monitor` shows whether keyd sees the key, and a log out and in after installing may be needed |
 | Edge or ElevenLabs always falls back to Piper | network, `ffmpeg` on the PATH (Edge), API key and credits (ElevenLabs); the daemon log names the reason |
 | A neural engine does not start | `server.log` in the model's data folder; `python neural/launcher.py status` shows budget and free VRAM |
 

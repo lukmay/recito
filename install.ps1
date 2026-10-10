@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 <#
-  Sets up the local TTS read-aloud tool on Windows (counterpart of install.sh
+  Sets up Recito, the local read-aloud tool, on Windows (counterpart of install.sh
   on Fedora). Idempotent, safe to run again.
 
     powershell -ExecutionPolicy Bypass -File .\install.ps1
@@ -226,8 +226,10 @@ Start-Process -FilePath $prevExe -WorkingDirectory $BinDir -WindowStyle Hidden `
 Step '7/7' 'Autostart and Start menu shortcut, starting tray'
 $trayPy = Join-Path $BinDir 'tts-tray.py'
 $pywExe = if (Test-Path $Pyw) { $Pyw } else { $Py }
-# Autostart and Start menu shortcut ('TTS-Vorlesen', searchable) through the
+# Autostart and Start menu shortcut ('Recito', searchable) through the
 # app logic (single source of truth): app icon and the tray's AppUserModelID.
+# Both calls first delete the shortcuts of the old name (TTS-Vorlesen.lnk in the
+# Startup folder and the Start menu), so the tray does not start twice.
 & $Py -c "import sys; sys.path.insert(0, r'$BinDir'); import win_autostart; win_autostart.set_enabled(True); win_autostart.start_menu_shortcut()" 2>$null
 # Start the tray unless it is already running; it starts the daemon itself.
 # Match on the script name: the preview build from step 6 runs under the same pythonw.
@@ -245,5 +247,5 @@ Write-Host '   Ctrl+Alt+O / Shift+O   Read OCR region / fast'
 Write-Host '   Ctrl+Alt+L             Pause / resume'
 Write-Host '   Ctrl+Alt+S             Stop'
 Write-Host ' Engine, voices, speed: tray settings.'
-Write-Host ' Manual start: Start menu -> "TTS-Vorlesen".'
+Write-Host ' Manual start: Start menu -> "Recito".'
 Write-Host '============================================================' -ForegroundColor Green

@@ -8,9 +8,9 @@ assets/icons/ (generated, committed).
 
 Output:
     app.ico                                   Windows, 16-256 px layers
-    hicolor/<N>x<N>/apps/tts-vorlesen.png     Linux icon theme
-    hicolor/scalable/apps/tts-vorlesen.svg
-    hicolor/scalable/status/tts-vorlesen-tray[-<state>]-symbolic.svg
+    hicolor/<N>x<N>/apps/recito.png         Linux icon theme
+    hicolor/scalable/apps/recito.svg
+    hicolor/scalable/status/recito-tray[-<state>]-symbolic.svg
                                               recolorable by Plasma and GNOME
     tray/tray-<variant>[-<state>]-<N>.png     rasters for the Windows tray
     logo-mark.svg                             settings sidebar logo
@@ -34,8 +34,8 @@ REPO = Path(__file__).resolve().parent.parent
 BRAND = REPO / "assets" / "brand"
 OUT = REPO / "assets" / "icons"
 
-APP_NAME = "tts-vorlesen"
-TRAY_NAME = "tts-vorlesen-tray"
+APP_NAME = "recito"
+TRAY_NAME = "recito-tray"
 ICO_SIZES = (16, 20, 24, 32, 40, 48, 64, 256)
 HICOLOR_SIZES = (16, 22, 24, 32, 48, 64, 128, 256)
 TRAY_SIZES = (16, 20, 24, 32, 40, 48, 64)

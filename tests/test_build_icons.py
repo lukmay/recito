@@ -143,6 +143,6 @@ def test_build_renders_every_file_and_is_deterministic(tmp_path):
     # The 16 px layer comes from the tuned drawing (opaque corner pixel),
     # the master has a rounded, transparent corner.
     from PySide6.QtGui import QImage
-    small = QImage(str(tmp_path / "a" / "hicolor" / "16x16" / "apps" / "tts-vorlesen.png"))
-    big = QImage(str(tmp_path / "a" / "hicolor" / "48x48" / "apps" / "tts-vorlesen.png"))
+    small = QImage(str(tmp_path / "a" / "hicolor" / "16x16" / "apps" / "recito.png"))
+    big = QImage(str(tmp_path / "a" / "hicolor" / "48x48" / "apps" / "recito.png"))
     assert small.pixelColor(0, 0).alpha() == 255 and big.pixelColor(0, 0).alpha() == 0

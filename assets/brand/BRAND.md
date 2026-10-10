@@ -1,4 +1,4 @@
-# Read Aloud / Vorlesen: brand brief
+# Recito: brand brief
 
 This brief is for whoever wires the icons into the app and its installers. It explains what the mark is, how it is built, which file goes where, and what to leave alone.
 
@@ -6,7 +6,11 @@ This brief is for whoever wires the icons into the app and its installers. It ex
 
 The mark is a speech bubble that talks. A rounded bubble draws its bottom left corner out into a short tail, and five sound bars of uneven height sit inside it. The bubble says "voice" and the bars say "audio". Together they show one idea, text that turns into speech, so the icon carries a single metaphor as the Windows and GNOME guidelines ask.
 
-The mark grows out of the onboarding mascot and keeps its colours and its five bars. Three things changed. The tail now grows from the bubble's corner instead of hanging below it as a separate rotated square, so the silhouette is one shape that survives 16 px. The bars are now round-capped pills on a fixed rhythm. The sparkle stays with the mascot and is absent from the icon, because a second motif turns into noise below 32 px.
+There is one mark, and it is the same everywhere: title bar, taskbar, tray, settings sidebar, installer, onboarding mascot. It grows out of the onboarding mascot. Three things changed from the mascot. The tail now grows from the bubble's corner instead of hanging below it as a separate rotated square, so the silhouette is one shape that survives 16 px. The bars are now round-capped pills on a fixed rhythm. The sparkle stays with the mascot and is absent from the icon, because a second motif turns into noise below 32 px.
+
+## One mark, five bars, at every size
+
+The silhouette, the five bars and the colour logic never change. Only what cannot be drawn at a size is simplified: the bars get thinner and fewer pixels tall, and the front edge disappears at 16 px. The bubble is a uniform scaling of the master at every size, so the tail and corners keep their proportions. A three bar variant was tried and rejected: it reads as a pause symbol, which is a tray state, and it loses the sound wave. The colour logic is one flat violet bubble, a darker front edge, white bars. The gradient and the rose centre bar of earlier drafts are gone, because they cannot survive below 40 px and made the sidebar logo differ from the title bar icon.
 
 ## Construction
 
@@ -19,6 +23,7 @@ tail           left edge runs straight down to the tip at (16, 236);
 bars           5 pills, width 18, centres x = 64, 96, 128, 160, 192
 bar spans      y 89..139, 73..155, 58..170, 81..147, 92..136
 front edge     the same bubble shifted 8 down, drawn behind in a darker violet
+               (the sidebar logo and the lockups carry it too)
 ```
 
 The front edge gives the icon the slight thickness that GNOME asks for and the soft depth Windows 11 icons have, without a blur filter. QtSvg and most icon pipelines rasterise it identically.
@@ -27,13 +32,13 @@ Every small size has its own drawing, aligned to whole pixels. Scaling the maste
 
 | File | Grid | Bars | Bar width | Notes |
 |---|---|---|---|---|
-| `app-icon.svg` | 256 | 5 | 18 | gradient, rose centre bar, front edge |
-| `app-icon-32.svg` | 32 | 5 | 2 | flat violet, 1 px front edge |
-| `app-icon-24.svg` | 24 | 3 | 3 | flat violet, 1 px front edge |
-| `app-icon-16.svg` | 16 | 3 | 2 | flat violet, no front edge |
-| `tray-*.svg` | 16 | 3 | 2 | one colour, bars cut out of the bubble |
+| `app-icon.svg`, `logo-mark.svg` | 256 | 5 | 18 | flat violet, front edge; both files are identical apart from the title |
+| `app-icon-32.svg` | 32 | 5 | 2 | 1 px front edge |
+| `app-icon-24.svg` | 24 | 5 | 2 | 1 px front edge, bars 1 px apart |
+| `app-icon-16.svg` | 16 | 5 | 1 | no front edge, bars 1 px apart |
+| `tray-*.svg` | 16 | 5 | 1 | same bubble as `app-icon-16.svg`, one colour, bars cut out |
 
-On the 16 grid the body spans x 1..15 and y 2..12 with radius 3.5, the tail tip sits at (1, 15), and the bars occupy x 3..5, 7..9 and 11..13. Every vertical edge lands on a pixel boundary.
+The small bubbles are the master scaled uniformly: 28 wide at 32 px, 22 wide at 24 px, 13 wide at 16 px. On the 16 grid the body spans x 1..14 and the bars occupy x 3..4, 5..6, 7..8, 9..10 and 11..12 with heights 3, 5, 7, 5, 3. On the 24 grid the bars are 2 wide with centres 6, 9, 12, 15, 18. Every vertical edge lands on a pixel boundary.
 
 ## Colours
 
@@ -41,12 +46,9 @@ All values come from `bin/ui/Theme.qml` or sit on the same violet ramp.
 
 | Role | Hex | Used in |
 |---|---|---|
-| Primary violet | `#6750A4` | mark, small app icons, light tray accent |
-| Gradient start | `#8A70D6` | master app icon, top left |
-| Gradient end | `#553C96` | master app icon, bottom right |
-| Front edge | `#3F2A78` | app icons |
-| Rose (tertiary container) | `#FFD8E4` | master app icon, centre bar only |
-| White | `#FFFFFF` | bars; dark tray glyph |
+| Primary violet | `#6750A4` | the bubble at every size, light tray accent |
+| Front edge | `#3F2A78` | app icons, logo mark, mascot |
+| White | `#FFFFFF` | bars everywhere; dark tray glyph |
 | Ink | `#1D1B20` | wordmark |
 | Light tray glyph | `#1C1B1F` | `tray-light*.svg` |
 | Light tray speaking | `#6750A4` | `tray-light-speaking.svg` |
@@ -54,15 +56,14 @@ All values come from `bin/ui/Theme.qml` or sit on the same violet ramp.
 | Dark tray speaking | `#A98DF7` | `tray-dark-speaking.svg` |
 | Dark tray error | `#FF897D` | `tray-dark-error.svg` |
 
-The gradient runs at about 120 degrees from top left to bottom right, which is the Windows default. The violet keeps a contrast ratio of about 6:1 on a light taskbar. On a dark taskbar the white bars carry the contrast.
+The brand colours are fixed. They do not follow the light or dark theme, not even in the mascot. The violet keeps a contrast ratio of about 6:1 on a light taskbar. On a dark taskbar the white bars carry the contrast.
 
 ## Files
 
 ```
 logo-mark.svg          flat mark, violet bubble with white bars, 256 viewBox
-logo-lockup-en.svg     mark plus "Read Aloud", text as paths
-logo-lockup-de.svg     mark plus "Vorlesen", text as paths
-app-icon.svg           master app icon, 256
+logo-lockup.svg        mark plus "Recito", text as paths
+app-icon.svg           master app icon, 256, identical to logo-mark.svg
 app-icon-16/24/32.svg  pixel-aligned small app icons
 tray-light*.svg        dark glyph for light taskbars and panels
 tray-dark*.svg         light glyph for dark taskbars and panels
@@ -78,8 +79,8 @@ Each state swaps what is inside the bubble and leaves the silhouette alone. At 1
 
 | State | Inside the bubble | Colour |
 |---|---|---|
-| idle | three sound bars | glyph colour |
-| speaking | taller, livelier bars | accent (violet, or Highlight on Plasma) |
+| idle | five sound bars | glyph colour |
+| speaking | five bars in a livelier pattern (5, 7, 3, 7, 5 px) | accent (violet, or Highlight on Plasma) |
 | paused | pause symbol, two squared bars | glyph colour |
 | error | exclamation mark | error red (NegativeText on Plasma) |
 
@@ -109,9 +110,9 @@ App icon on Linux. Install `app-icon.svg` as `hicolor/scalable/apps/<app-id>.svg
 
 Tray. Replace `QIcon.fromTheme("audio-speakers")` in `bin/tts-tray.py` with the scheme above. Build one `QIcon` per state with 16, 20, 24 and 32 px pixmaps from the 16 grid file. Switch states from the daemon status: speaking while audio plays, paused while paused, error when the daemon does not answer.
 
-Settings sidebar tile. Replace the 40 px `Rectangle` with the `ic.app` glyph in `bin/tts_settings.qml` with `logo-mark.svg` shown at 40 px. Drop the tile background, because the bubble is its own shape. If the layout needs a square slot, keep a transparent 40 by 40 item and centre the mark in it.
+Settings sidebar tile. The sidebar shows `logo-mark.svg` at 40 px, the same drawing as the app icon, so title bar and sidebar match. No tile background, because the bubble is its own shape. If the layout needs a square slot, keep a transparent 40 by 40 item and centre the mark in it.
 
-Onboarding mascot. Keep `Mascot.qml` animated: the glow, the bouncing bars, the hop, the waves and the sparkle all stay. Change its body to the new proportions:
+Onboarding mascot. `Mascot.qml` stays animated: the glow, the bouncing bars, the hop, the waves and the sparkle. Its body uses the mark's proportions, colours and front edge:
 
 ```
 bubble          width = size, body height = size * 0.73, corner radius = body height * 0.34
@@ -120,7 +121,7 @@ tail            drawn from the bottom left corner as part of one Shape path,
                 the bottom edge at size * 0.29 from the left
 bars            5 pills, width = size * 0.08, centre spacing = size * 0.143
 bar rest height size * (0.22, 0.37, 0.50, 0.29, 0.20)
-colours         bubble primaryContainer, bars primary (unchanged)
+colours         bubble #6750A4, front edge #3F2A78, bars #FFFFFF, fixed in both themes
 ```
 
 Port the bubble as a `QtQuick.Shapes` path using the coordinates in "Construction", scaled by `size / 224`. The bars keep their animation and only change their rest heights and spacing.
@@ -136,7 +137,7 @@ Port the bubble as a `QtQuick.Shapes` path using the coordinates in "Constructio
 
 - Do not scale `app-icon.svg` below 40 px.
 - Do not put the mark on a coloured tile, add an outline or add a shadow.
-- Do not recolour the bars, apart from the rose centre bar in the master.
+- Do not recolour the bars, and do not vary the bar count between sizes.
 - Do not add the sparkle, waves or text to the app icon or the tray glyphs.
 - Do not mirror the bubble or rotate it.
 

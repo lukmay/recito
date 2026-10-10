@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Platform layer for the TTS setup.
+Platform layer for Recito.
 
 Holds the OS-specific parts so that daemon, client and tray run on Linux and
 Windows (and in principle macOS):
@@ -512,7 +512,7 @@ def read_hotkey(action: str) -> str:
     try:
         out = subprocess.run(
             ["kreadconfig6", "--file", "kglobalshortcutsrc", "--group", "services",
-             "--group", f"tts-vorlesen-{action}.desktop", "--key", "_launch"],
+             "--group", f"recito-{action}.desktop", "--key", "_launch"],
             capture_output=True, text=True, check=False).stdout.strip()
     except OSError:              # no KDE (kreadconfig6 missing)
         return ""
@@ -528,7 +528,7 @@ def write_hotkey(action: str, qt_combo: str):
     try:
         subprocess.run(
             ["kwriteconfig6", "--file", "kglobalshortcutsrc", "--group", "services",
-             "--group", f"tts-vorlesen-{action}.desktop", "--key", "_launch", qt_combo],
+             "--group", f"recito-{action}.desktop", "--key", "_launch", qt_combo],
             check=False)
     except OSError:              # no KDE: still save the other settings
         pass
@@ -574,7 +574,7 @@ def apply_hotkeys(handlers=None):
     try:
         import win_hotkeys
     except Exception as exc:
-        notify("TTS", f"Hotkeys inaktiv ({exc}).")
+        notify("Recito", f"Hotkeys inaktiv ({exc}).")
         return
     items = [(read_hotkey(action), _hk_handlers[action])
              for action, _label in HOTKEY_ACTIONS

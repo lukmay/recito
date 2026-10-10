@@ -8,7 +8,7 @@ the hicolor theme, so the theme names below resolve there first.
 Tray icon per platform:
   Windows  tray-light / tray-dark rasters, picked from the taskbar theme
            (SystemUsesLightTheme), several sizes for HiDPI.
-  Linux    theme icon tts-vorlesen-tray[-<state>]-symbolic: Plasma recolors it
+  Linux    theme icon recito-tray[-<state>]-symbolic: Plasma recolors it
            through its current-color-scheme stylesheet, GNOME (AppIndicator)
            through the -symbolic suffix. Rasters are the fallback.
 """
@@ -16,9 +16,9 @@ Tray icon per platform:
 import sys
 from pathlib import Path
 
-APP_NAME = "tts-vorlesen"                 # theme icon name of the app
-TRAY_NAME = "tts-vorlesen-tray"           # theme icon name of the tray
-APP_USER_MODEL_ID = "TTSVorlesen.Tray"    # Windows taskbar grouping
+APP_NAME = "recito"                 # theme icon name of the app
+TRAY_NAME = "recito-tray"           # theme icon name of the tray
+APP_USER_MODEL_ID = "Recito.Tray"    # Windows taskbar grouping
 STATES = ("idle", "speaking", "paused", "error")
 TRAY_SIZES = (16, 20, 24, 32, 40, 48, 64)
 APP_SIZES = (16, 22, 24, 32, 48, 64, 128, 256)

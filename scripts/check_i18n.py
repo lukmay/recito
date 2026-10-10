@@ -23,7 +23,7 @@ META_FIELDS = ("name", "locale", "decimal")
 
 # Values that may equal the English text: names, key caps, units and words
 # that are the same in that language.
-SAME_ALWAYS = re.compile(r"^(key\.|engine\.\w+\.title$|engine\.mssp\.menu$"
+SAME_ALWAYS = re.compile(r"^(key\.|app\.name$|tray\.tooltip$|engine\.\w+\.title$|engine\.mssp\.menu$"
                          r"|rules\.group\.(obsidian|markdown)$)")
 SAME_OK = {
     "de": {"lang.auto", "card.online", "card.offline", "el.optional", "el.err.http", "pause.label",

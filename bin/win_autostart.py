@@ -22,7 +22,8 @@ from pathlib import Path
 import tts_icons
 import tts_platform
 
-LNK_NAME = "TTS-Vorlesen.lnk"
+LNK_NAME = "Recito.lnk"
+LEGACY_LNK_NAMES = ("TTS-Vorlesen.lnk",)        # before the rename to Recito
 
 
 def _programs_dir() -> Path:
@@ -55,7 +56,18 @@ def enabled() -> bool:
     return _lnk_path().exists()
 
 
+def remove_legacy():
+    """Delete the shortcuts of the old name, so the app does not start twice."""
+    for d in (_startup_dir(), _programs_dir()):
+        for name in LEGACY_LNK_NAMES:
+            try:
+                (d / name).unlink()
+            except OSError:
+                pass
+
+
 def set_enabled(on: bool):
+    remove_legacy()
     if on:
         create_shortcut(_lnk_path())
     else:
@@ -63,9 +75,10 @@ def set_enabled(on: bool):
 
 
 def start_menu_shortcut(lnk=None):
-    """Start menu entry 'TTS-Vorlesen' (searchable), or at lnk."""
+    """Start menu entry 'Recito' (searchable), or at lnk."""
+    remove_legacy()
     create_shortcut(Path(lnk) if lnk else _programs_dir() / LNK_NAME,
-                    description="TTS read aloud (tray)")
+                    description="Recito (tray)")
 
 
 def _ps_quote(value) -> str:

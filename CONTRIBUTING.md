@@ -16,6 +16,8 @@ Do not add tests that start a real model server or load weights onto the GPU.
 
 ## Code style
 
+The app was called TTS-Vorlesen before it became Recito. The internal names `%APPDATA%\piper`, `piper-bin`, `piper-venv`, `tts-neural`, the keys in `voices.conf` and the module file names are historical names and stay as they are, so that installed setups keep working.
+
 Code, comments, log messages and identifiers are in English. Comments describe what the code does now, in short phrases; leave out the history of how it got there. Texts shown in the settings window, the tray menu or notifications are user-facing and will move to translation files, so keep them separate from log messages.
 
 `ruff check .` must pass; the configuration is in `pyproject.toml`. `.editorconfig` sets UTF-8, LF line endings and 4-space indentation.

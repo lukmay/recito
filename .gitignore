@@ -31,3 +31,13 @@ venv/
 .vscode/
 .idea/
 Thumbs.db
+
+# Raw window grabs of tools/make_screenshots.py
+docs/images/_raw/
+
+# Hero video source and toolchain (kept outside the repository)
+video/
+
+# Rendered hero video (published as a GitHub attachment)
+docs/video/*.mp4
+docs/images/hero.webp

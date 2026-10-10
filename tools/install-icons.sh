@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Installs the app and tray icons into the user's hicolor icon theme
-# (~/.local/share/icons/hicolor), or removes them with --remove. Called by
+# (~/.local/share/icons/hicolor), removes them with --remove, or removes only
+# the icons of the old name (tts-vorlesen) with --remove-legacy. Called by
 # install.sh and uninstall.sh; the source is assets/icons/hicolor.
 #
-#   tools/install-icons.sh [--remove]
+#   tools/install-icons.sh [--remove | --remove-legacy]
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -11,6 +12,11 @@ SRC="$REPO/assets/icons/hicolor"
 DST="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor"
 
 if [ "${1:-}" = "--remove" ]; then
+    find "$DST" -type f \( -name 'recito.*' -o -name 'recito-tray*' \
+        -o -name 'tts-vorlesen.*' -o -name 'tts-vorlesen-tray*' \) \
+        -delete 2>/dev/null || true
+elif [ "${1:-}" = "--remove-legacy" ]; then
+    # Icons of the name before Recito, so no stale icon stays in the theme.
     find "$DST" -type f \( -name 'tts-vorlesen.*' -o -name 'tts-vorlesen-tray*' \) \
         -delete 2>/dev/null || true
 else
@@ -18,8 +24,8 @@ else
         echo "    (no icons in $SRC, run tools/build_icons.py)" >&2
         exit 0
     fi
-    # Same layout as the source: <size>/apps/tts-vorlesen.png,
-    # scalable/apps/tts-vorlesen.svg, scalable/status/tts-vorlesen-tray*.svg
+    # Same layout as the source: <size>/apps/recito.png,
+    # scalable/apps/recito.svg, scalable/status/recito-tray*.svg
     (cd "$SRC" && find . -type f) | while read -r rel; do
         install -D -m 0644 "$SRC/$rel" "$DST/$rel"
     done

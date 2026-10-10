@@ -76,7 +76,7 @@ if [[ "$OCR" == 1 ]]; then
     TEXT="$(tesseract "$CROP" stdout -l "$TLANG" 2>/dev/null | tr -s '[:space:]' ' ' || true)"
     rm -f "$CROP"
     if [[ -z "${TEXT// /}" ]]; then
-        notify-send "TTS OCR" "No text recognized." 2>/dev/null || true
+        notify-send "Recito OCR" "No text recognized." 2>/dev/null || true
         exit 0
     fi
     printf '%s' "$TEXT" | "$SAY" "$KEY" "${FASTARGS[@]}" --stdin

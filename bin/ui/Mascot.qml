@@ -15,6 +15,14 @@ Item {
 
     onExcitedChanged: if (excited) hop.restart()
 
+    // Bubble body plus tail, shifted down by dy for the front edge.
+    function bubblePath(dy) {
+        return "M0 " + (56 + dy) + "A56 56 0 0 1 56 " + dy + "H168A56 56 0 0 1 224 " + (56 + dy)
+             + "V" + (108 + dy) + "A56 56 0 0 1 168 " + (164 + dy)
+             + "H80Q64 " + (164 + dy) + " 50.43 " + (172.48 + dy) + "L8.48 " + (198.7 + dy)
+             + "Q0 " + (204 + dy) + " 0 " + (194 + dy) + "Z"
+    }
+
     // soft glow behind the bubble
     Rectangle {
         anchors.centerIn: bubble
@@ -79,17 +87,21 @@ Item {
             NumberAnimation { target: bubble; property: "scale"; to: 1.07; duration: 140; easing.type: Easing.OutQuad }
             NumberAnimation { target: bubble; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 2.2 }
         }
+        // Brand colours are fixed, like the logo: violet bubble, darker front
+        // edge, white bars. They do not follow the light or dark theme.
         Shape {
-            width: 224; height: 204
+            width: 224; height: 212
             transform: Scale { xScale: m.size / 224; yScale: m.size / 224 }
             preferredRendererType: Shape.CurveRenderer
             ShapePath {
-                fillColor: Theme.primaryContainer
+                fillColor: "#3F2A78"
                 strokeColor: "transparent"
-                PathSvg {
-                    path: "M0 56A56 56 0 0 1 56 0H168A56 56 0 0 1 224 56V108A56 56 0 0 1 168 164"
-                          + "H80Q64 164 50.43 172.48L8.48 198.7Q0 204 0 194Z"
-                }
+                PathSvg { path: m.bubblePath(8) }
+            }
+            ShapePath {
+                fillColor: "#6750A4"
+                strokeColor: "transparent"
+                PathSvg { path: m.bubblePath(0) }
             }
         }
         Row {
@@ -105,7 +117,7 @@ Item {
                     width: m.size * 0.08
                     radius: width / 2
                     anchors.verticalCenter: parent.verticalCenter
-                    color: Theme.primary
+                    color: "#FFFFFF"
                     property real amp: modelData
                     // extra bounce while excited, eased back to 1 afterwards
                     property real kick: 1

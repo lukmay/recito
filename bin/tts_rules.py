@@ -1089,7 +1089,7 @@ SHELLS = {
 
 PROMPT = r"""# Text rules for the read-aloud app on this computer
 
-You are helping the user with Read Aloud (tts-setup), a local text-to-speech app on @SYSTEM@. Before it reads text aloud, the app runs the text through one list of rules, top to bottom, each on the result of the one before. A rule finds a piece of text and replaces it, so the voice says it right. Examples: "SQL" read as "S Q L", "z.B." read as "zum Beispiel". Rules take effect on the next read; nothing needs a restart.
+You are helping the user with Recito, a local text-to-speech app on @SYSTEM@. Before it reads text aloud, the app runs the text through one list of rules, top to bottom, each on the result of the one before. A rule finds a piece of text and replaces it, so the voice says it right. Examples: "SQL" read as "S Q L", "z.B." read as "zum Beispiel". Rules take effect on the next read; nothing needs a restart.
 
 The list is split into groups, in this order:
 

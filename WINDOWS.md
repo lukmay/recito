@@ -22,7 +22,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 | `%APPDATA%\piper` | `voices.conf`, Piper voices, `daemon.log`, `elevenlabs.key` (`PIPER_DIR` overrides) |
 | `%LOCALAPPDATA%\tts-neural` | local neural models (`TTS_NEURAL_DIR` overrides) |
 
-The script stops a running tray app and daemon first, because they lock files in the venv. It installs the Python packages, replaces an onnxruntime-directml left by older versions with the CPU build of onnxruntime, copies the program, adds missing keys to an existing `voices.conf` without touching the rest, downloads the default Piper voices, creates the autostart and Start menu shortcuts (`TTS-Vorlesen.lnk`) and starts the tray app. It is safe to run again.
+The script stops a running tray app and daemon first, because they lock files in the venv. It installs the Python packages, replaces an onnxruntime-directml left by older versions with the CPU build of onnxruntime, copies the program, adds missing keys to an existing `voices.conf` without touching the rest, downloads the default Piper voices, creates the autostart and Start menu shortcuts (`Recito.lnk`) and starts the tray app. A shortcut `TTS-Vorlesen.lnk` from an older version is deleted, so the app does not start twice. It is safe to run again.
 
 Kokoro runs as a model server with its own venv. Install it separately with `neural\kokoro2\setup.ps1`, see [neural/kokoro2/README.md](neural/kokoro2/README.md).
 

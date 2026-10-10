@@ -590,7 +590,7 @@ def main():
     if not QSystemTrayIcon.isSystemTrayAvailable():
         QMessageBox.critical(None, tr("app.name"), tr("tray.msg.noTray"))
         return 1
-    QGuiApplication.setDesktopFileName("tts-tray")
+    QGuiApplication.setDesktopFileName("recito")
     tray = Tray(app)
     if text_arg is not None:             # started with a command: run it right away
         QTimer.singleShot(500, lambda: tray._to_reader(text_arg))

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Removes the TTS setup. Keeps the voices (~/.local/share/piper/*.onnx) and the
-# venv by default; --purge removes them as well.
+# Removes Recito (formerly tts-vorlesen), under the new and the old names.
+# Keeps the voices (~/.local/share/piper/*.onnx) and the venv by default; --purge removes them as well.
 set -uo pipefail
 
 PURGE=0
@@ -14,8 +14,11 @@ systemctl --user daemon-reload 2>/dev/null || true
 echo "==> Removing scripts, client and launchers"
 rm -f "$HOME/.local/bin/piper-read-daemon.py" "$HOME/.local/bin/piper-read-say"
 rm -f "$HOME/.local/bin/tts-rules" "$HOME/.local/bin/tts_rules.py"
-rm -rf "$HOME/.local/share/tts-vorlesen"
-rm -f "$HOME/.local/share/applications/tts-vorlesen-"*.desktop
+rm -rf "$HOME/.local/share/recito" "$HOME/.local/share/tts-vorlesen"   # new and old name
+rm -f "$HOME/.local/share/applications/recito"*.desktop \
+      "$HOME/.local/share/applications/tts-vorlesen-"*.desktop \
+      "$HOME/.local/share/applications/tts-tray.desktop" \
+      "$HOME/.config/autostart/recito.desktop" "$HOME/.config/autostart/tts-tray.desktop"
 rm -f "$HOME/.local/bin/tts_icons.py"
 rm -rf "$HOME/.local/bin/icons"
 
@@ -23,9 +26,11 @@ echo "==> Removing app and tray icons"
 bash "$(cd "$(dirname "$0")" && pwd)/tools/install-icons.sh" --remove
 
 echo "==> Removing KDE shortcuts"
-for b in de de-fast de-ocr en en-fast en-ocr pause; do
-    kwriteconfig6 --file kglobalshortcutsrc --group services \
-        --group "tts-vorlesen-${b}.desktop" --key _launch --delete 2>/dev/null || true
+for b in de de-fast de-ocr en en-fast en-ocr auto auto-ocr pause reader; do
+    for prefix in recito tts-vorlesen; do          # new and old name
+        kwriteconfig6 --file kglobalshortcutsrc --group services \
+            --group "${prefix}-${b}.desktop" --key _launch --delete 2>/dev/null || true
+    done
 done
 
 echo "==> Disabling keyd (sudo)"

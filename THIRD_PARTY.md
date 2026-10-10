@@ -1,6 +1,6 @@
 # Third-party components
 
-This repository contains code and one bundled font. Models, voices and most libraries are downloaded by the install and setup scripts and are not part of the repository; their licenses still apply to anyone who installs and uses them. Licenses can change between releases. The entries below describe the pinned versions; check the linked source before redistributing anything.
+Recito contains code and one bundled font. Models, voices and most libraries are downloaded by the install and setup scripts and are not part of the repository; their licenses still apply to anyone who installs and uses them. Licenses can change between releases. The entries below describe the pinned versions; check the linked source before redistributing anything.
 
 ## Bundled in this repository
 
