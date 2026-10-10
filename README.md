@@ -9,7 +9,7 @@
 
 <p align="center">
 Local and private or online, in your own voice, in 13 languages.<br>
-For Windows 11 and Fedora KDE Plasma 6.
+For Windows 11 and Linux (Fedora KDE Plasma 6, GNOME, Ubuntu).
 </p>
 
 https://github.com/user-attachments/assets/b08ddc0a-82ed-40f0-a7fc-da29e99af1b9
@@ -60,14 +60,27 @@ Recito reads the text you select in any app. Press a hotkey and the first senten
 
 Go to the [latest release](https://github.com/lukmay/recito/releases/latest) and download the file for your system. No git is needed.
 
-Windows 11 (Python 3.12 or 3.13, 64-bit): download `Recito-<version>-windows.zip`, extract it and double-click `Install Recito.cmd`. The window stays open at the end so you can read the result.
+Windows 11:
 
-Fedora KDE Plasma 6: download `Recito-<version>-linux.tar.gz`, then:
+1. Download `Recito-Setup-<version>.exe` from the latest release.
+2. Run it. Done.
+
+The setup installs for your user only, so it needs no administrator rights, and it brings its own Python, so you install nothing first. It downloads Python, the speech engines and the default voices, which takes a few minutes and needs the internet. Recito starts in the system tray when it is done, and the setup assistant opens on the first start. Windows may show SmartScreen because the file is not code-signed: click More info, then Run anyway. To remove Recito, use Windows Settings, Apps; the uninstaller asks whether to keep your settings and voices. To update, run the newer setup over the old one.
+
+Linux (Fedora KDE Plasma 6, GNOME, Ubuntu):
+
+1. Download the AppImage `Recito-<version>-x86_64.AppImage` from the latest release.
+2. Make it executable (right-click > Properties > Allow executing, or `chmod +x Recito-*.AppImage`).
+3. Run it. Done.
+
+The first start sets everything up in your home folder: Python 3.12, the speech engines, the default voices, the launcher, autostart and the shortcuts. That takes a few minutes and needs the internet; a small window shows the progress. No root, no distro Python and no terminal are needed, and the next start just opens the tray. Select text and press `Meta+Ctrl+P` to hear it (log out and in once so the shortcut loads). A newer AppImage updates the installation by itself. To remove Recito and everything it fetched, run `./Recito-*.AppImage --uninstall` (add `--keep-voices` to keep voices and configuration).
+
+If something optional is missing (screen OCR, the ALSA player, a clipboard tool), one dialog shows the `dnf` or `apt` command for it. The core path works without root.
+
+Prefer a terminal? This does the same without the AppImage:
 
 ```bash
-tar xzf Recito-<version>-linux.tar.gz
-cd Recito-<version>-linux
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/lukmay/recito/master/install.sh | bash
 ```
 
 To update, install the newer release over the old one. `SHA256SUMS.txt` on the release page lets you check the downloads. The release lists what changed; see also [CHANGELOG.md](CHANGELOG.md).
@@ -81,21 +94,21 @@ git clone https://github.com/lukmay/recito.git
 cd recito
 ```
 
-The install scripts are the same ones the release contains. Windows 11:
+The install scripts are the ones the setups run. Windows 11:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-The script creates a venv in `%LOCALAPPDATA%\piper-venv`, copies the program to `%LOCALAPPDATA%\piper-bin`, downloads the default Piper voices, writes `%APPDATA%\piper\voices.conf`, enables autostart and starts the tray app. Details are in [WINDOWS.md](WINDOWS.md).
+The script needs Python 3.12 or 3.13. It creates a venv in `%LOCALAPPDATA%\piper-venv`, copies the program to `%LOCALAPPDATA%\piper-bin`, downloads the default Piper voices, writes `%APPDATA%\piper\voices.conf`, enables autostart and starts the tray app. Details are in [WINDOWS.md](WINDOWS.md). The Windows setup is built from `installer/recito.iss`, see [CONTRIBUTING.md](CONTRIBUTING.md#windows-setup).
 
-Fedora KDE Plasma 6:
+Linux:
 
 ```bash
 ./install.sh
 ```
 
-The script installs the system packages (with sudo), creates `~/.local/share/piper-venv` and downloads the voices. It installs the daemon as the systemd user service `piper-read`, registers the KDE shortcuts and builds [keyd](https://github.com/rvaiya/keyd) for the AltGr hotkeys. Log out and back in once afterwards. `./uninstall.sh` removes the setup, and `--purge` also deletes voices and the venv.
+The script needs no root. It uses [uv](https://docs.astral.sh/uv/) (fetched into `~/.local/bin` if missing) to get Python 3.12, creates `~/.local/share/piper-venv` and downloads the voices. It installs the daemon as the systemd user service `piper-read` and registers the shortcuts (KDE through `kglobalshortcutsrc`, GNOME through gsettings). A static ffmpeg comes with the Python packages when the system has none. Log out and back in once afterwards. `./install.sh --system-deps` also installs the optional system packages with sudo, and `./install.sh --keyd` builds [keyd](https://github.com/rvaiya/keyd) for the AltGr hotkeys. `./uninstall.sh` removes the setup, and `--purge` also deletes voices, the venv and the Python that uv fetched.
 
 Both scripts are idempotent. Run them again after changing files in `bin/`, `scripts/` or `neural/`. A setup assistant opens on the first start and walks through languages, engine, voice, speed and shortcuts.
 
@@ -121,7 +134,7 @@ Default hotkeys on Windows (changeable in the settings window):
 | `Ctrl+Alt+L` | Pause or resume |
 | `Ctrl+Alt+S` | Stop |
 
-On Linux keyd maps AltGr combinations to shortcuts that KDE can bind: `AltGr+P` reads the selection, `AltGr+O` reads a screen region, `AltGr+Shift` makes either faster and `AltGr+L` pauses. Two mouse side buttons read the selection and start OCR. keyd matches the mouse by its USB ID in `keyd/default.conf`; replace the example ID with your own (`sudo keyd monitor` shows it).
+On Linux the shortcuts are `Meta+Ctrl+P` (read), `Meta+Ctrl+L` (pause) and, on KDE, `Meta+Ctrl+O` (OCR). keyd (`./install.sh --keyd`) maps AltGr combinations to shortcuts that KDE can bind: `AltGr+P` reads the selection, `AltGr+O` reads a screen region, `AltGr+Shift` makes either faster and `AltGr+L` pauses. Two mouse side buttons read the selection and start OCR. keyd matches the mouse by its USB ID in `keyd/default.conf`; replace the example ID with your own (`sudo keyd monitor` shows it).
 
 Left-click the tray icon to open the settings window, right-click for the menu. The window chooses engine and voices, previews each voice, sets speed and pauses, records hotkeys and creates reference voices for the cloning models.
 
@@ -268,7 +281,8 @@ docs/images/            README images, built by tools/make_screenshots.py
 neural/                 model servers, launcher, benchmarks
 scripts/                hotkey wrappers for Linux
 tools/                  icon build, icon install, screenshot and release build scripts
-keyd/, kde/, systemd/   Linux integration
+keyd/, kde/, gnome/, systemd/   Linux integration
+appimage/               AppRun and desktop file of the Linux AppImage
 config/voices.conf      configuration template
 VERSION                 the version; changing it publishes a release
 CHANGELOG.md            what changed in each release

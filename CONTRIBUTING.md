@@ -22,9 +22,33 @@ A release is published by GitHub Actions when `VERSION` changes on `master`.
 2. Add a `## 1.1.0` section to `CHANGELOG.md` that tells users what changed. It is put at the top of the release notes, below the install steps; GitHub adds the list of merged changes after it.
 3. Commit and push to `master`.
 
-`.github/workflows/release.yml` runs the tests and ruff, creates the tag `v1.1.0` on that commit if it does not exist, and attaches `Recito-1.1.0-windows.zip`, `Recito-1.1.0-linux.tar.gz` and `SHA256SUMS.txt`. The archives are built from the commit with `git archive`, so only committed files are in them, and tests, CI files, icon sources and screenshots are left out.
+`.github/workflows/release.yml` runs the tests and ruff, creates the tag `v1.1.0` on that commit if it does not exist, and attaches `Recito-Setup-1.1.0.exe`, `Recito-1.1.0-x86_64.AppImage`, `Recito-1.1.0-linux.tar.gz` and `SHA256SUMS.txt`. The Linux archive is built from the commit with `git archive`, so only committed files are in it, and tests, CI files, icon sources and screenshots are left out. The setup is built and tried out on a Windows runner first (see [Windows setup](#windows-setup)); if that job fails, no release is published. There is no Windows zip any more, because the setup replaces it and a second Windows download only raises the question of which one to take.
 
-To build the same assets locally, run `python tools/build_release.py 1.1.0 dist`. To rebuild the assets of a release that exists, run the workflow by hand from the Actions tab; it replaces the attached files of the tag of `VERSION`. A push that changes `VERSION` but finds the release already published does nothing.
+To build the Linux archive locally, run `python tools/build_release.py 1.1.0 dist`. To rebuild the assets of a release that exists, run the workflow by hand from the Actions tab; it replaces the attached files of the tag of `VERSION`. A push that changes `VERSION` but finds the release already published does nothing. The AppImage is built from the Linux archive by `tools/build_appimage.sh 1.1.0 dist` on Ubuntu 22.04 or newer (it needs meson, ninja, libwayland-dev and the other tools named in the script header; `SKIP_WL_CLIPBOARD=1` leaves the bundled wl-clipboard out). It holds `appimage/AppRun`, a pinned uv and the Linux archive; AppRun runs the same `install.sh` as the one-liner, so test installer changes with `install.sh` and the AppImage only for the packaging. The pinned versions and hashes of uv, appimagetool and wl-clipboard are at the top of the script; update them together. To rebuild the assets of a release that exists, run the workflow by hand from the Actions tab; it replaces the attached files of the tag of `VERSION`. A push that changes `VERSION` but finds the release already published does nothing.
+
+## Windows setup
+
+`Recito-Setup-<version>.exe` is an [Inno Setup](https://jrsoftware.org/isinfo.php) 6 installer, defined in `installer/recito.iss`. It installs per user (no administrator rights), copies `bin/`, `neural/` and the icons, and then runs `install.ps1` hidden. With the bundled `uv.exe` the script creates the venv with a uv-managed Python 3.12, installs the packages, copies a static ffmpeg (from the `imageio-ffmpeg` package) next to the program, downloads the default Piper voices and makes the autostart and Start menu shortcuts through `bin/win_autostart.py`. The setup shows the step the script reports and starts the tray at the end. Without a network the setup fails with a message and a non-zero exit code. Only the voice download may fail; the settings window offers the voice again at the first start.
+
+The setup keeps the historical folders, so it upgrades an install made by `install.ps1` in place and keeps its settings: `%LOCALAPPDATA%\piper-bin` (program), `%LOCALAPPDATA%\piper-venv` (venv), `%LOCALAPPDATA%\piper-python` (the Python that uv manages) and `%APPDATA%\piper` (config and voices). With `/DIR=<folder>` the venv and the Python go into that folder instead. The uninstaller stops Recito, removes the program, venv, Python and shortcuts, and asks whether to keep the config and voices. A silent uninstall keeps them unless it gets `/PURGE=1`.
+
+To build it locally:
+
+```powershell
+winget install JRSoftware.InnoSetup
+python tools/fetch_uv.py                  # uv.exe into installer/, version in installer/UV_VERSION
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" /DAppVersion=1.0.0 installer\recito.iss
+```
+
+The result is `dist\Recito-Setup-1.0.0.exe`. Test it only through `tools/test_installer.ps1`. It installs, upgrades and uninstalls in a throwaway folder and points `LOCALAPPDATA`, `APPDATA`, `PIPER_DIR` and `TTS_NEURAL_DIR` there, so a running Recito on the same machine stays untouched:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\test_installer.ps1 -Setup dist\Recito-Setup-1.0.0.exe
+```
+
+The test needs the internet and takes about five minutes. By hand, the switches are `/VERYSILENT /SUPPRESSMSGBOXES /DIR=<folder>` and `/TESTMODE=1`, which makes no shortcut, starts no tray and renders no previews. The wizard images come from `tools/build_installer_art.py`. The release job pins Inno Setup and checks its hash, and `tools/fetch_uv.py` checks the hash of the uv release. To update either, change the version and the hash in `release.yml` or the version in `installer/UV_VERSION`.
+
+The setup is not code-signed, so SmartScreen warns on the first run. A certificate would remove that.
 
 ## Code style
 

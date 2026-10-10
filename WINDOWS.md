@@ -2,27 +2,27 @@
 
 The daemon, the client, the filters and the config format are the same on Windows and Linux. Everything that differs between the systems sits in `bin/tts_platform.py` and the `bin/win_*.py` modules; one `voices.conf` is valid on both.
 
-## Requirements
-
-- Python 3.12 or 3.13, 64-bit, from python.org or `winget install Python.Python.3.12`. The Microsoft Store Python redirects writes to `%LOCALAPPDATA%` into its own sandbox, so the installer looks for a regular Python first.
-- ffmpeg on the PATH (Edge-TTS decoding, voice import).
-
-`install.ps1` installs ffmpeg through winget if it is missing.
-
 ## Install
+
+Download `Recito-Setup-<version>.exe` from the latest release and run it. It installs for the current user, needs no administrator rights and brings its own Python 3.12 (managed by uv) and a static ffmpeg for Edge-TTS decoding and voice import. It runs `install.ps1` hidden, so the steps below are what the setup does too. Apps in Windows Settings lists it; the uninstaller asks whether to keep the settings and voices. [CONTRIBUTING.md](CONTRIBUTING.md#windows-setup) describes how the setup is built and tested.
+
+From a checkout, `install.ps1` does the same with a Python you provide (3.12 or 3.13, 64-bit, from python.org or `winget install Python.Python.3.12`; the Microsoft Store Python redirects writes to `%LOCALAPPDATA%` into its own sandbox, so the script looks for a regular Python first):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
+Run with `-Uv <path to uv.exe>` it creates the venv with a uv-managed Python instead, which is what the setup does.
+
 | Path | Content |
 |---|---|
 | `%LOCALAPPDATA%\piper-venv` | Python venv |
+| `%LOCALAPPDATA%\piper-python` | the Python 3.12 that uv manages for the venv (setup only) |
 | `%LOCALAPPDATA%\piper-bin` | daemon, client, tray app, modules, `neural\` |
 | `%APPDATA%\piper` | `voices.conf`, Piper voices, `daemon.log`, `elevenlabs.key` (`PIPER_DIR` overrides) |
 | `%LOCALAPPDATA%\tts-neural` | local neural models (`TTS_NEURAL_DIR` overrides) |
 
-The script stops a running tray app and daemon first, because they lock files in the venv. It installs the Python packages, replaces an onnxruntime-directml left by older versions with the CPU build of onnxruntime, copies the program, adds missing keys to an existing `voices.conf` without touching the rest, downloads the default Piper voices, creates the autostart and Start menu shortcuts (`Recito.lnk`) and starts the tray app. A shortcut `TTS-Vorlesen.lnk` from an older version is deleted, so the app does not start twice. It is safe to run again.
+The script stops a running tray app and daemon first, because they lock files in the venv. It installs the Python packages (and `imageio-ffmpeg`, whose ffmpeg.exe it copies into `piper-bin`; the app puts that folder at the end of PATH, so a system ffmpeg is used first), replaces an onnxruntime-directml left by older versions with the CPU build of onnxruntime, copies the program, adds missing keys to an existing `voices.conf` without touching the rest, downloads the default Piper voices, creates the autostart and Start menu shortcuts (`Recito.lnk`) and starts the tray app. A shortcut `TTS-Vorlesen.lnk` from an older version is deleted, so the app does not start twice. It is safe to run again.
 
 Kokoro runs as a model server with its own venv. Install it separately with `neural\kokoro2\setup.ps1`, see [neural/kokoro2/README.md](neural/kokoro2/README.md).
 

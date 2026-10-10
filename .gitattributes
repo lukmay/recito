@@ -1,0 +1,6 @@
+# Files that run on Linux keep LF line endings, also in a Windows checkout.
+*.sh text eol=lf
+AppRun text eol=lf
+*.desktop text eol=lf
+*.service text eol=lf
+VERSION text eol=lf

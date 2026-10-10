@@ -4,6 +4,7 @@ After=default.target
 
 [Service]
 ExecStart=%h/.local/share/piper-venv/bin/python %h/.local/bin/piper-read-daemon.py
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 Restart=always
 RestartSec=2
 

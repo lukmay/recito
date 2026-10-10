@@ -41,3 +41,7 @@ video/
 # Rendered hero video (published as a GitHub attachment)
 docs/video/*.mp4
 docs/images/hero.webp
+
+# Windows installer: build output and the uv.exe that tools/fetch_uv.py downloads
+dist/
+installer/uv.exe

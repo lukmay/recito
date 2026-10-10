@@ -23,6 +23,7 @@ Stdlib only, plus optional packages imported lazily where they are needed
 """
 
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -40,6 +41,17 @@ IS_LINUX = not IS_WINDOWS and not IS_MAC
 # global hotkeys in its own process. Linux: systemd and KDE do both.
 TRAY_MANAGES_DAEMON = not IS_LINUX
 INPROC_HOTKEYS = IS_WINDOWS
+
+
+def _use_bundled_ffmpeg():
+    """The Windows setup copies ffmpeg.exe next to the program. Put that folder
+    at the end of PATH, so a system ffmpeg wins and ours is the fallback."""
+    here = Path(__file__).resolve().parent
+    if IS_WINDOWS and (here / "ffmpeg.exe").is_file() and shutil.which("ffmpeg") is None:
+        os.environ["PATH"] = os.environ.get("PATH", "") + os.pathsep + str(here)
+
+
+_use_bundled_ffmpeg()
 
 
 # --------------------------------------------------------------------------- #

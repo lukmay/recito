@@ -29,7 +29,11 @@ if [[ ! -f "$CONF_SRC" ]]; then
 fi
 
 echo "==> 1/4  Installing build tools"
-dnf install -y gcc make git
+if command -v dnf >/dev/null 2>&1; then
+    dnf install -y gcc make git
+else
+    apt-get install -y gcc make git
+fi
 
 echo "==> 2/4  Building and installing keyd"
 BUILD="$(mktemp -d)"

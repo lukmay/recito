@@ -4,9 +4,13 @@
     python tools/build_release.py <version> <outdir> [--ref REF] [--notes FILE]
 
 Writes into <outdir>:
-    Recito-<version>-windows.zip      app files and "Install Recito.cmd"
     Recito-<version>-linux.tar.gz     app files and install.sh
-    SHA256SUMS.txt
+    SHA256SUMS.txt                    the release workflow adds the Windows
+                                      setup and the Linux AppImage to it
+
+The Windows release is Recito-Setup-<version>.exe, built with Inno Setup from
+installer/recito.iss; there is no Windows zip. The Linux AppImage is built from
+the tar.gz by tools/build_appimage.sh.
 
 The files come from `git archive REF` (default: tag v<version> if it exists,
 else HEAD), so untracked or uncommitted files never end up in a release.
@@ -17,35 +21,23 @@ that file, followed by the CHANGELOG.md section of the version when there is one
 import argparse
 import hashlib
 import io
-import time
 import re
 import subprocess
 import sys
 import tarfile
-import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# Left out of both archives (prefix match on whole path parts).
+# Left out of the archive (prefix match on whole path parts).
 COMMON_EXCLUDE = (
     ".github", ".gitignore", ".editorconfig", "pyproject.toml", "CONTRIBUTING.md",
-    "tests", "docs", "video", "assets/brand", "tools",
+    "tests", "docs", "video", "assets/brand", "tools", "installer", "appimage",
 )
-# Only one platform needs these.
+# Windows files, not in the Linux archive.
 WINDOWS_ONLY = ("install.ps1", "WINDOWS.md", "bin/win_")
-LINUX_ONLY = ("install.sh", "uninstall.sh", "scripts", "kde", "keyd", "systemd", "linux-mssp")
 # Re-added although their folder is excluded (install.sh calls it).
-KEEP = {"linux": ("tools/install-icons.sh",), "windows": ()}
-
-INSTALL_CMD = (
-    "@echo off\r\n"
-    "title Install Recito\r\n"
-    'cd /d "%~dp0"\r\n'
-    'powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0install.ps1"\r\n'
-    "echo.\r\n"
-    "pause\r\n"
-)
+KEEP = ("tools/install-icons.sh",)
 
 
 def under(path: str, prefixes) -> bool:
@@ -58,13 +50,13 @@ def under(path: str, prefixes) -> bool:
     return False
 
 
-def wanted(path: str, platform: str) -> bool:
-    if path in KEEP[platform]:
+def wanted(path: str) -> bool:
+    """Whether a file of the repository goes into the Linux archive."""
+    if path in KEEP:
         return True
     if under(path, COMMON_EXCLUDE):
         return False
-    other = LINUX_ONLY if platform == "windows" else WINDOWS_ONLY
-    return not under(path, other)
+    return not under(path, WINDOWS_ONLY)
 
 
 def git(*args: str) -> bytes:
@@ -91,16 +83,6 @@ def read_archive(ref: str):
     return out
 
 
-def write_zip(path: Path, root: str, files, extra) -> None:
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
-        for name, _mode, mtime, data in sorted(files + extra):
-            t = max(mtime, 315532800)        # zip cannot hold dates before 1980
-            zi = zipfile.ZipInfo(f"{root}/{name}", date_time=time.gmtime(t)[:6])
-            zi.compress_type = zipfile.ZIP_DEFLATED
-            zi.external_attr = 0o644 << 16
-            z.writestr(zi, data)
-
-
 def write_tar(path: Path, root: str, files, extra) -> None:
     with tarfile.open(path, "w:gz") as tf:
         for name, mode, mtime, data in sorted(files + extra):
@@ -121,11 +103,15 @@ def notes_header(version: str, changelog: str) -> str:
     lines = [
         "## Install",
         "",
-        f"**Windows 11:** download `{tag}-windows.zip`, extract it, and double-click "
-        "`Install Recito.cmd`. It needs Python 3.12 or 3.13 (64-bit); the installer says so if not.",
+        f"**Windows 11:** download `Recito-Setup-{version}.exe` and run it. Nothing else is needed, "
+        "not even Python. The file is not code-signed, so Windows may show SmartScreen: "
+        "click More info, then Run anyway.",
         "",
-        f"**Fedora KDE Plasma 6:** download `{tag}-linux.tar.gz`, then run "
-        f"`tar xzf {tag}-linux.tar.gz && cd {tag}-linux && ./install.sh`.",
+        f"**Linux (Fedora KDE Plasma 6, GNOME, Ubuntu):** download `Recito-{version}-x86_64.AppImage`, "
+        "make it executable (right-click, Properties, Allow executing, or `chmod +x`) and run it. "
+        "It needs no root, no Python and no terminal. Prefer the terminal? "
+        "`curl -fsSL https://raw.githubusercontent.com/lukmay/recito/master/install.sh | bash`. "
+        f"`{tag}-linux.tar.gz` holds the same installer for offline use.",
         "",
         "To update, install the newer release over the old one. Your settings and voices stay. "
         "`SHA256SUMS.txt` lets you check the downloads.",
@@ -162,17 +148,13 @@ def main() -> int:
 
     a.outdir.mkdir(parents=True, exist_ok=True)
     stem = f"Recito-{a.version}"
-    win_root, lin_root = f"{stem}-windows", f"{stem}-linux"
+    lin_root = f"{stem}-linux"
 
-    win = [m for m in members if wanted(m[0], "windows")]
-    lin = [m for m in members if wanted(m[0], "linux")]
-    mtime = members[0][2]
-    write_zip(a.outdir / f"{win_root}.zip", win_root, win,
-              extra_all + [("Install Recito.cmd", 0o644, mtime, INSTALL_CMD.encode("ascii"))])
+    lin = [m for m in members if wanted(m[0])]
     write_tar(a.outdir / f"{lin_root}.tar.gz", lin_root, lin, extra_all)
 
     sums = []
-    for f in (a.outdir / f"{win_root}.zip", a.outdir / f"{lin_root}.tar.gz"):
+    for f in (a.outdir / f"{lin_root}.tar.gz",):
         sums.append(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.name}")
     (a.outdir / "SHA256SUMS.txt").write_text("\n".join(sums) + "\n", encoding="utf-8", newline="\n")
 

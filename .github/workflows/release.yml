@@ -2,6 +2,8 @@ name: release
 
 # Publishes a GitHub release when VERSION changes on master. Run it by hand to
 # build the release of the current VERSION, also when its tag already exists.
+# The Windows setup is built and tested first, so a release never goes out
+# without it.
 on:
   push:
     branches: [master]
@@ -24,9 +26,111 @@ jobs:
   tests:
     uses: ./.github/workflows/tests.yml
 
-  release:
-    needs: tests
+  # Does the release of VERSION still have to be built? A push for an existing
+  # release does nothing; a manual run rebuilds it.
+  plan:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+      proceed: ${{ steps.v.outputs.proceed }}
+    steps:
+      # actions/checkout v4, pinned to a commit
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Read the version
+        id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          if [ "$EVENT" != "workflow_dispatch" ] && gh release view "v$version" >/dev/null 2>&1; then
+            echo "::notice::Release v$version already exists, nothing to do."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Recito-Setup-<version>.exe, built with Inno Setup and tried out on the runner.
+  windows:
+    needs: [tests, plan]
+    if: needs.plan.outputs.proceed == 'true'
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: ${{ needs.plan.outputs.tag }}
+      REF: ${{ inputs.ref }}
+      # Inno Setup, the official installer of jrsoftware.org (also published on GitHub)
+      INNO_VERSION: "6.7.3"
+      INNO_SHA256: 9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732
+    steps:
+      # actions/checkout v4, pinned to a commit
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      # actions/setup-python v5, pinned to a commit
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+
+      # Same commit that build_release.py archives: the given ref, else the tag
+      # of VERSION if it exists, else this branch.
+      - name: Check out the release commit
+        shell: bash
+        run: |
+          if [ -n "$REF" ]; then
+            git checkout "$REF"
+          elif git rev-parse -q --verify "refs/tags/$TAG^{commit}" >/dev/null; then
+            git checkout "$TAG"
+          fi
+          have="$(tr -d '[:space:]' < VERSION)"
+          if [ "$have" != "$VERSION" ]; then
+            echo "::error::VERSION at this commit says $have, not $VERSION"
+            exit 1
+          fi
+
+      - name: Fetch uv
+        run: python tools/fetch_uv.py
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $exe = Join-Path $env:RUNNER_TEMP "innosetup-$env:INNO_VERSION.exe"
+          Invoke-WebRequest -UseBasicParsing -OutFile $exe `
+            "https://github.com/jrsoftware/issrc/releases/download/is-$($env:INNO_VERSION -replace '\.', '_')/innosetup-$env:INNO_VERSION.exe"
+          $sha = (Get-FileHash $exe -Algorithm SHA256).Hash
+          if ($sha -ne $env:INNO_SHA256.ToUpper()) { throw "Inno Setup hash mismatch: $sha" }
+          Start-Process $exe -Wait -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CURRENTUSER',
+            "/DIR=$env:RUNNER_TEMP\inno"
+          "$env:RUNNER_TEMP\inno" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      - name: Build the setup
+        shell: pwsh
+        run: |
+          ISCC.exe /Q "/DAppVersion=$env:VERSION" installer/recito.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          Get-ChildItem dist
+
+      # Installs, upgrades and uninstalls in a throwaway folder (needs the internet).
+      - name: Test the setup
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/test_installer.ps1 -Setup "dist\Recito-Setup-$env:VERSION.exe"
+
+      # actions/upload-artifact v4, pinned to a commit
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-setup
+          path: dist/Recito-Setup-*.exe
+          if-no-files-found: error
+
+  release:
+    needs: [tests, plan, windows]
+    if: needs.plan.outputs.proceed == 'true'
+    # Ubuntu 22.04 on purpose: the wl-clipboard build inside the AppImage links
+    # against this glibc, so the AppImage runs on every newer distribution.
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
@@ -39,28 +143,43 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Read the version
-        id: v
-        run: |
-          version="$(tr -d '[:space:]' < VERSION)"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
-
       - name: Build the assets
         env:
-          VERSION: ${{ steps.v.outputs.version }}
+          VERSION: ${{ needs.plan.outputs.version }}
           REF: ${{ inputs.ref }}
         run: |
           args=()
           if [ -n "$REF" ]; then args+=(--ref "$REF"); fi
           python tools/build_release.py "$VERSION" dist --notes release-notes.md "${args[@]}"
-          ls -l dist
+
+      # actions/download-artifact v4, pinned to a commit
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: windows-setup
+          path: dist
+
+      - name: Add the setup to SHA256SUMS.txt
+        working-directory: dist
+        run: |
+          sha256sum Recito-Setup-*.exe >> SHA256SUMS.txt
+          ls -l
+          cat SHA256SUMS.txt
+
+      - name: Build the AppImage
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends meson ninja-build pkg-config file gcc libc6-dev libwayland-dev libwayland-bin wayland-protocols
+          bash tools/build_appimage.sh "$VERSION" dist
+          APPIMAGE_EXTRACT_AND_RUN=1 "dist/Recito-$VERSION-x86_64.AppImage" --version
+          cat dist/SHA256SUMS.txt
 
       - name: Create or update the release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.v.outputs.tag }}
-          VERSION: ${{ steps.v.outputs.version }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          VERSION: ${{ needs.plan.outputs.version }}
           EVENT: ${{ github.event_name }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then

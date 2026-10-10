@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Entry point of the Recito AppImage. The AppImage is a small bootstrapper: on
+# the first run, and when it is newer than the installed copy, it installs
+# Recito into the user's home (no root, no distro Python) by running the
+# bundled install.sh with the bundled uv. On every other run it just starts
+# the tray.
+#
+#   Recito-<version>-x86_64.AppImage             install or update if needed, then start
+#   ... --reinstall                              install again, even if up to date
+#   ... --uninstall [--keep-voices]              remove Recito and everything it fetched
+#   ... --version | --help
+set -uo pipefail
+
+HERE="$(dirname "$(readlink -f "$0")")"
+PAYLOAD="$HERE/usr/share/recito"
+BUNDLED="$(tr -d '[:space:]' < "$PAYLOAD/VERSION")"
+TTS="$HOME/.local/share/recito"
+BIN="$HOME/.local/bin"
+VENV="$HOME/.local/share/piper-venv"
+export UV="$HERE/usr/bin/uv"
+
+# The AppImage runtime sets variables that make no sense for the tray.
+unset APPDIR ARGV0 OWD PYTHONHOME PYTHONPATH
+
+case "${1:-}" in
+    --version) echo "Recito $BUNDLED"; exit 0 ;;
+    --help|-h) awk 'NR>1 && /^#/ {sub(/^# ?/, ""); print; next} NR>1 {exit}' "$HERE/AppRun"; exit 0 ;;
+    --uninstall)
+        shift
+        if [ "${1:-}" = "--keep-voices" ]; then exec bash "$PAYLOAD/uninstall.sh"; fi
+        exec bash "$PAYLOAD/uninstall.sh" --purge ;;
+esac
+
+installed="$(cat "$TTS/installed-version" 2>/dev/null || true)"
+need=0
+[ "${1:-}" = "--reinstall" ] && need=1
+if [ -z "$installed" ] || [ ! -x "$VENV/bin/python" ] || [ ! -f "$BIN/tts-tray.py" ]; then
+    need=1
+elif [ "$installed" != "$BUNDLED" ]; then
+    # update only to a newer version, never back to an older AppImage
+    newest="$(printf '%s\n%s\n' "$installed" "$BUNDLED" | sort -V | tail -n1)"
+    [ "$newest" = "$BUNDLED" ] && need=1
+fi
+
+if [ "$need" = 1 ]; then
+    args=(--gui)
+    [ -n "${RECITO_NO_START:-}" ] && args+=(--no-start)
+    bash "$PAYLOAD/install.sh" "${args[@]}" || exit $?
+    # install.sh has started the tray itself.
+    exit 0
+fi
+
+# Already installed: make sure the daemon runs, then start the tray.
+systemctl --user start piper-read.service >/dev/null 2>&1 || true
+export PATH="$BIN:$PATH"
+exec "$VENV/bin/python" "$BIN/tts-tray.py"
