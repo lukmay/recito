@@ -12,7 +12,7 @@ Local and private or online, in your own voice, in 13 languages.<br>
 For Windows 11 and Fedora KDE Plasma 6.
 </p>
 
-https://github.com/user-attachments/assets/2f2886c4-ca6d-4cb7-ad32-8ed2e68c6dd7
+https://github.com/user-attachments/assets/b08ddc0a-82ed-40f0-a7fc-da29e99af1b9
 
 Recito reads the text you select in any app. Press a hotkey and the first sentence plays while the rest is still being synthesized. Draw a rectangle on the screen and Recito reads the text it recognizes there (OCR).
 
