@@ -85,7 +85,9 @@ try {
     $realPath = $env:PATH; $env:PATH = "$env:SystemRoot\System32"
     $platPath = & $py -c "import sys; sys.path.insert(0, r'$App'); import tts_platform, shutil; print(shutil.which('ffmpeg'))"
     $env:PATH = $realPath
-    Check ($platPath -like "*$App*") 'tts_platform finds the bundled ffmpeg on PATH'
+    # Compare by content, not by string: CI temp paths are 8.3 short names (RUNNER~1).
+    $bundled = $platPath -and (Test-Path (Join-Path (Split-Path $platPath) 'tts_platform.py'))
+    Check $bundled "tts_platform finds the bundled ffmpeg on PATH ($platPath)"
 
     # The shortcut code runs against the throwaway APPDATA (the setup skipped it in test mode).
     & $py -c "import sys; sys.path.insert(0, r'$App'); import win_autostart; win_autostart.set_enabled(True); win_autostart.start_menu_shortcut()"
