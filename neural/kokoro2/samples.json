@@ -1,0 +1,19 @@
+{
+  "_doc": "Kokoro has no emotion tags. This file covers voice comparisons (same sentence, different voices, including the older German voice martin), speed, and pronunciation markup [word](/IPA/), each with and without.",
+  "samples": [
+    {"id": "de_v_thorsten", "lang": "de", "voice": "thorsten", "text": "Ein neuronales Netz lernt seine Gewichte durch Gradientenabstieg. Dabei wird der Fehler Schicht für Schicht zurückgerechnet.", "note": "Default voice (Thorsten-Voice, real recordings). Compare with the next four: same sentence."},
+    {"id": "de_v_thorsten_ep10", "lang": "de", "voice": "thorsten_ep10", "text": "Ein neuronales Netz lernt seine Gewichte durch Gradientenabstieg. Dabei wird der Fehler Schicht für Schicht zurückgerechnet.", "note": "Thorsten, later training epoch: tighter and a bit faster, according to its author less natural than epoch 5."},
+    {"id": "de_v_martin", "lang": "de", "voice": "martin", "text": "Ein neuronales Netz lernt seine Gewichte durch Gradientenabstieg. Dabei wird der Fehler Schicht für Schicht zurückgerechnet.", "note": "Older voice: same weights as kokoro-martin.onnx used by the kokoro engine (here with German text normalization)."},
+    {"id": "de_v_victoria", "lang": "de", "voice": "victoria", "text": "Ein neuronales Netz lernt seine Gewichte durch Gradientenabstieg. Dabei wird der Fehler Schicht für Schicht zurückgerechnet.", "note": "Female voice Victoria (kikiri, synthetic training data)."},
+    {"id": "de_v_kerstin", "lang": "de", "voice": "kerstin", "text": "Ein neuronales Netz lernt seine Gewichte durch Gradientenabstieg. Dabei wird der Fehler Schicht für Schicht zurückgerechnet.", "note": "Female voice Kerstin (real recordings, but only 2.3 h of data)."},
+    {"id": "en_v_bella", "lang": "en", "voice": "af_bella", "text": "Gradient descent updates the weights a little at a time, following the slope of the loss surface downhill.", "note": "US, female, livelier than af_heart."},
+    {"id": "en_v_emma", "lang": "en", "voice": "bf_emma", "text": "Gradient descent updates the weights a little at a time, following the slope of the loss surface downhill.", "note": "British, female (UK pronunciation through the 'b' pipeline)."},
+    {"id": "en_v_michael", "lang": "en", "voice": "am_michael", "text": "Gradient descent updates the weights a little at a time, following the slope of the loss surface downhill.", "note": "US, male, calm."},
+    {"id": "de_tempo_13", "lang": "de", "speed": 1.3, "text": "Die Kullback-Leibler-Divergenz misst, wie stark eine Wahrscheinlichkeitsverteilung von einer zweiten, erwarteten Verteilung abweicht.", "note": "Speed 1.3 (native speed, no post-processing). Compare with de_lang (speed 1.0)."},
+    {"id": "en_tempo_125", "lang": "en", "speed": 1.25, "text": "Satisfiability checking asks whether there exists an assignment of truth values that makes a given formula true.", "note": "Speed 1.25. Compare with en_lang (speed 1.0)."},
+    {"id": "de_markup_ohne", "lang": "de", "text": "Morgen erkläre ich dir Machine Learning und das Paper über Transformer.", "note": "WITHOUT markup: espeak reads the English words with German pronunciation."},
+    {"id": "de_markup_mit", "lang": "de", "text": "Morgen erkläre ich dir [Machine Learning](/məʃˈiːn lˈœːnɪŋ/) und das Paper über [Transformer](/tɹænsfˈɔːmɐ/).", "note": "WITH markup [word](/IPA/): English pronunciation forced for Machine Learning and Transformer, Paper stays without. ASR WER does not count the markup words (tags are removed)."},
+    {"id": "en_markup_ohne", "lang": "en", "text": "Misaki is the phonemizer behind Kokoro, and it runs on the Aachen cluster.", "note": "WITHOUT markup: proper names from dictionary or heuristics."},
+    {"id": "en_markup_mit", "lang": "en", "text": "[Misaki](/misˈɑki/) is the phonemizer behind [Kokoro](/kˈOkəɹO/), and it runs on the [Aachen](/ˈɑːxən/) cluster.", "note": "WITH markup: names pronounced in Japanese or German."}
+  ]
+}

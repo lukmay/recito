@@ -1,0 +1,16 @@
+{
+  "_doc": "Registry of the local neural TTS servers. Key = engine name in voices.conf (engine=<key>). title = display name. dir = folder in neural/ with server.py and setup.ps1/setup.sh. port = default port (the server may move to a free one and report it in its port file). vram_mb = measured need of the whole server process; the launcher only starts what fits the budget and leaves the reserve free, and passes vram_mb to the torch allocator as a hard cap. cpu_ok = fast enough to read aloud without an NVIDIA GPU. clone = clones reference voices from <data_dir>/voices/<id>.wav (voice id \"ref:<id>\"). instruct = accepts a style instruction or parameters (<key>_instruct in voices.conf). tags = understands inline tags such as [laugh]. markup = understands pronunciation markup [word](/IPA/). native_speed = renders the requested speed itself (0.5 to 2.0, duration in proportion); without it the daemon sends speed 1.0 and time-stretches the audio. env = environment variables for the server process.",
+  "kokoro2":    {"title": "Kokoro", "dir": "kokoro2", "port": 37775, "vram_mb": 1400,
+                 "cpu_ok": true, "markup": true, "native_speed": true,
+                 "env": {"KOKORO2_MAX_DE": "1"}},
+  "chatterbox": {"title": "Chatterbox", "dir": "chatterbox", "port": 37771, "vram_mb": 5200,
+                 "clone": true, "instruct": true, "tags": true,
+                 "env": {"CB_LAZY": "0"}},
+  "qwen3":      {"title": "Qwen3-TTS", "dir": "qwen3", "port": 37772, "vram_mb": 5300,
+                 "instruct": true,
+                 "env": {"QWEN3_CLONE": "0"}},
+  "stepaudio":  {"title": "Step-Audio-EditX", "dir": "stepaudio", "port": 37773, "vram_mb": 8600,
+                 "instruct": true, "tags": true, "native_speed": true},
+  "fish":       {"title": "Fish Audio S2 Pro", "dir": "fish", "port": 37774, "vram_mb": 9800,
+                 "clone": true, "instruct": true, "tags": true}
+}

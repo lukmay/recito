@@ -1,0 +1,33 @@
+# Voice models and weights are downloaded by the install/setup scripts.
+*.onnx
+*.onnx.json
+*.pth
+*.pt
+*.safetensors
+*.bin
+*.npz
+
+# Secrets and local config
+*.key
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Generated samples and logs
+*.wav
+*.log
+
+# Editor / OS
+*~
+*.swp
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db

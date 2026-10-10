@@ -1,0 +1,31 @@
+singleton Theme Theme.qml
+singleton Tr Tr.qml
+Icon Icon.qml
+Headline Headline.qml
+Title Title.qml
+Body Body.qml
+Small Small.qml
+GroupLabel GroupLabel.qml
+Section Section.qml
+Divider Divider.qml
+Chip Chip.qml
+M3Button M3Button.qml
+FilledButton FilledButton.qml
+TonalButton TonalButton.qml
+TextButton TextButton.qml
+OutlinedButton OutlinedButton.qml
+Banner Banner.qml
+SwitchItem SwitchItem.qml
+Step Step.qml
+HelpTip HelpTip.qml
+Keycaps Keycaps.qml
+Mascot Mascot.qml
+FocusRing FocusRing.qml
+ChoiceCard ChoiceCard.qml
+Onboarding Onboarding.qml
+LanguageBox LanguageBox.qml
+HotkeyField HotkeyField.qml
+CapabilityList CapabilityList.qml
+WelcomeDemo WelcomeDemo.qml
+LangChip LangChip.qml
+LangGap LangGap.qml

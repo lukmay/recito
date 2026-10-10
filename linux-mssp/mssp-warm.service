@@ -1,0 +1,25 @@
+[Unit]
+Description=Warm wineserver for Microsoft Speech Platform voices (balcon/mssp)
+
+[Service]
+Type=exec
+Environment=WINEPREFIX=%h/.local/share/mssp/prefix
+Environment=WINEDEBUG=-all
+# No graphics driver, otherwise every balcon process briefly registers a window
+# and the taskbar flickers on each sentence.
+Environment=DISPLAY=
+Environment=WAYLAND_DISPLAY=
+ExecStart=%h/.local/share/mssp/wine/bin/wineserver --foreground --persistent
+# Synthesize both voices once at start: loads the engine DLL and voice data into
+# the page cache, so the first hotkey is already warm.
+ExecStartPost=%h/.local/bin/balcon-mssp -n Hedda -t Warmstart -w %t/mssp-warm.wav
+ExecStartPost=%h/.local/bin/balcon-mssp -n ZiraPro -t warmup -w %t/mssp-warm.wav
+ExecStartPost=/usr/bin/rm -f %t/mssp-warm.wav
+Restart=always
+RestartSec=2
+# Wine leftovers (winedevice.exe etc.) tend to ignore SIGTERM, so SIGKILL after
+# 5 s keeps a restart from waiting on the stop timeout.
+TimeoutStopSec=5
+
+[Install]
+WantedBy=default.target

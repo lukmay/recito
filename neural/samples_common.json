@@ -1,0 +1,13 @@
+{
+  "_doc": "Shared test texts for all models (no tags), so the models can be compared directly. Model-specific examples (with and without tags, style directions) are in neural/<model>/samples.json in the same format.",
+  "samples": [
+    {"id": "de_kurz", "lang": "de", "text": "Guten Morgen! Das ist ein kurzer Test der lokalen Sprachausgabe."},
+    {"id": "de_lang", "lang": "de", "text": "Die Kullback-Leibler-Divergenz misst, wie stark eine Wahrscheinlichkeitsverteilung von einer zweiten, erwarteten Verteilung abweicht. Sie ist nicht symmetrisch, und genau deshalb ist die Reihenfolge der Argumente wichtig."},
+    {"id": "de_zahlen", "lang": "de", "text": "Am 14. November 2026 um 9:30 Uhr kostet das Ticket 23,50 Euro, also rund 12 Prozent mehr als im Vorjahr."},
+    {"id": "de_denglisch", "lang": "de", "text": "Ich starte jetzt das Deployment auf dem Server und checke danach die Logs im Dashboard."},
+    {"id": "de_umlaute", "lang": "de", "text": "Über die Brücke fährt ein grünes Fahrzeug; die Echtzeitsprachverarbeitungssoftware läuft äußerst zuverlässig."},
+    {"id": "en_kurz", "lang": "en", "text": "Good morning! This is a short test of the local speech engine."},
+    {"id": "en_lang", "lang": "en", "text": "Satisfiability checking asks whether there exists an assignment of truth values that makes a given formula true. Modern solvers combine clever search with conflict-driven clause learning, which lets them handle millions of variables."},
+    {"id": "en_zahlen", "lang": "en", "text": "On March 3rd, 2026, at 4:15 PM, the server processed 1,250 requests in 0.8 seconds."}
+  ]
+}

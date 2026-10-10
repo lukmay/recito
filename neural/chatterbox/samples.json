@@ -1,0 +1,108 @@
+{
+ "_doc": "Chatterbox examples. English runs on Turbo (inline tags in square brackets), German on Multilingual V3 (no tags; exaggeration/cfg via instruct, syntax 'exaggeration=0.8 cfg=0.3'; model=mtl3|turbo|kartoffel selects the sub-model).",
+ "samples": [
+  {
+   "id": "en_plain",
+   "lang": "en",
+   "text": "Honestly, I did not expect the proof to work on the first try. It did, and now I have to explain why.",
+   "note": "Turbo without tags: base sound of the voice, reference for the tag variants."
+  },
+  {
+   "id": "en_tags_laugh",
+   "lang": "en",
+   "text": "Honestly, I did not expect the proof to work on the first try [laugh]. It did, and now I have to explain why [sigh].",
+   "note": "Same sentence with [laugh] and [sigh]: a real laugh after 'try', an audible sigh at the end."
+  },
+  {
+   "id": "en_tags_cough",
+   "lang": "en",
+   "text": "Let me just [clear throat] start again. The lecture begins at nine [cough], sorry, at nine thirty.",
+   "note": "[clear throat] and [cough] as sounds mid-sentence; the text should continue cleanly afterwards."
+  },
+  {
+   "id": "en_tags_chuckle",
+   "lang": "en",
+   "text": "Oh, you thought the exam was easy? [chuckle] Wait until you see question four. [gasp] It has three parts.",
+   "note": "[chuckle] (soft laugh) and [gasp] (breath in surprise)."
+  },
+  {
+   "id": "en_tag_whisper",
+   "lang": "en",
+   "text": "[whispering] Do not tell anyone, but the solution is on page twelve.",
+   "note": "Style tag [whispering] at the start: should sound quieter and breathy. Style tags are weaker than sound tags."
+  },
+  {
+   "id": "en_caps",
+   "lang": "en",
+   "text": "The function is NOT symmetric. You have to compute it in THIS order, not the other way around.",
+   "note": "Emphasis through capitals: NOT and THIS should be audibly stressed (often only weakly with Turbo)."
+  },
+  {
+   "id": "en_mtl",
+   "lang": "en",
+   "text": "Honestly, I did not expect the proof to work on the first try. It did, and now I have to explain why.",
+   "instruct": "model=mtl3",
+   "note": "Same sentence as en_plain, but through Multilingual V3 instead of Turbo: sound comparison of the two sub-models (slower)."
+  },
+  {
+   "id": "de_plain",
+   "lang": "de",
+   "text": "Ehrlich gesagt hätte ich nicht gedacht, dass der Beweis beim ersten Versuch klappt. Jetzt muss ich erklären, warum.",
+   "note": "Multilingual V3 with default values (exaggeration 0.5, cfg 0.5)."
+  },
+  {
+   "id": "de_exag",
+   "lang": "de",
+   "text": "Ehrlich gesagt hätte ich nicht gedacht, dass der Beweis beim ersten Versuch klappt. Jetzt muss ich erklären, warum.",
+   "instruct": "exaggeration=0.9 cfg=0.3",
+   "note": "Same sentence with high exaggeration and low cfg: livelier, more emphasis, often a bit faster."
+  },
+  {
+   "id": "de_calm",
+   "lang": "de",
+   "text": "Ehrlich gesagt hätte ich nicht gedacht, dass der Beweis beim ersten Versuch klappt. Jetzt muss ich erklären, warum.",
+   "instruct": "exaggeration=0.25 cfg=0.6",
+   "note": "Same sentence, calm and matter-of-fact: low exaggeration, good for long technical texts."
+  },
+  {
+   "id": "de_emotion",
+   "lang": "de",
+   "text": "Was? Die Klausur ist schon morgen? Das kann doch nicht wahr sein!",
+   "instruct": "exaggeration=1.0 cfg=0.3",
+   "note": "Agitated text with maximum exaggeration: exclamations and questions should sound clearly emotional."
+  },
+  {
+   "id": "de_caps",
+   "lang": "de",
+   "text": "Die Divergenz ist NICHT symmetrisch. Man muss sie in DIESER Reihenfolge berechnen.",
+   "note": "Capital-letter emphasis in German: Multilingual barely reacts to it; mainly a test of whether it triggers spelling out."
+  },
+  {
+   "id": "de_fach",
+   "lang": "de",
+   "text": "Ein neuronales Netz lernt, indem es den Gradienten der Verlustfunktion bezüglich seiner Gewichte berechnet und diese in kleinen Schritten anpasst.",
+   "note": "Typical read-aloud text with technical terms: pronunciation and intonation over a longer sentence."
+  },
+  {
+   "id": "de_kartoffel",
+   "lang": "de",
+   "text": "Ehrlich gesagt hätte ich nicht gedacht, dass der Beweis beim ersten Versuch klappt. Jetzt muss ich erklären, warum.",
+   "instruct": "model=kartoffel",
+   "note": "Same sentence as de_plain through Kartoffelbox v0.2 (German community fine-tune) instead of Multilingual V3: compares pronunciation and intonation. Loads an extra 1 GB of VRAM on first use."
+  },
+  {
+   "id": "de_male",
+   "lang": "de",
+   "voice": "ref:de_male_1",
+   "text": "Ein neuronales Netz lernt, indem es den Gradienten der Verlustfunktion bezüglich seiner Gewichte berechnet und diese in kleinen Schritten anpasst.",
+   "note": "Like de_fach, but with the cloned male voice de_male_1."
+  },
+  {
+   "id": "en_ref_female",
+   "lang": "en",
+   "voice": "ref:en_female_1",
+   "text": "Honestly, I did not expect the proof to work on the first try [laugh]. It did, and now I have to explain why [sigh].",
+   "note": "Tags with the cloned voice en_female_1 instead of a built-in one: do the sounds work with a foreign voice too?"
+  }
+ ]
+}

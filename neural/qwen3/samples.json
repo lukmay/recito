@@ -1,0 +1,126 @@
+{
+ "_doc": "Qwen3-TTS: the same sentences without and with a style direction (instruct field, free text in German or English; preset speakers of the 1.7B CustomVoice model only). There are no inline tags. ref:<id> = cloned reference voice (without instruct).",
+ "samples": [
+  {
+   "id": "de_neutral",
+   "lang": "de",
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "note": "Reference without direction, preset speaker Dylan (style directions only work with preset speakers).",
+   "voice": "Dylan"
+  },
+  {
+   "id": "de_hoerbuch",
+   "lang": "de",
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "instruct": "Sprich langsam und ruhig, wie ein Hörbuchsprecher, mit kleinen Pausen.",
+   "note": "Same sentence as de_neutral: should sound noticeably slower and more relaxed.",
+   "voice": "Dylan"
+  },
+  {
+   "id": "de_aufgeregt",
+   "lang": "de",
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "instruct": "Sprich aufgeregt und schnell, voller Begeisterung.",
+   "note": "Same sentence: faster, higher energy and pitch.",
+   "voice": "Dylan"
+  },
+  {
+   "id": "de_fluestern",
+   "lang": "de",
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "instruct": "Flüstere leise, als würdest du ein Geheimnis verraten.",
+   "note": "Same sentence: audibly breathy or whispered? (Qwen often renders whispering only as a quieter, breathy voice.)",
+   "voice": "Dylan"
+  },
+  {
+   "id": "de_traurig",
+   "lang": "de",
+   "text": "Leider ist die Abgabefrist schon gestern abgelaufen, und wir können nichts mehr daran ändern.",
+   "instruct": "Sprich traurig und niedergeschlagen, mit leiser Stimme.",
+   "note": "Emotion: subdued, slower, falling intonation.",
+   "voice": "Dylan"
+  },
+  {
+   "id": "de_stimme_serena",
+   "lang": "de",
+   "voice": "Serena",
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "note": "Female preset voice (native Chinese speaker) in German: is an accent audible?"
+  },
+  {
+   "id": "en_neutral",
+   "lang": "en",
+   "text": "Gradient descent follows the steepest downhill direction, step by step, until the error barely changes anymore.",
+   "note": "Reference without instruction, default voice.",
+   "voice": "Aiden"
+  },
+  {
+   "id": "en_audiobook",
+   "lang": "en",
+   "text": "Gradient descent follows the steepest downhill direction, step by step, until the error barely changes anymore.",
+   "instruct": "Speak slowly and calmly, like an audiobook narrator, with small pauses.",
+   "note": "Same sentence: slower and more relaxed.",
+   "voice": "Aiden"
+  },
+  {
+   "id": "en_excited",
+   "lang": "en",
+   "text": "Gradient descent follows the steepest downhill direction, step by step, until the error barely changes anymore.",
+   "instruct": "Speak excitedly and fast, full of enthusiasm.",
+   "note": "Same sentence: faster, more energy.",
+   "voice": "Aiden"
+  },
+  {
+   "id": "en_whisper",
+   "lang": "en",
+   "text": "Gradient descent follows the steepest downhill direction, step by step, until the error barely changes anymore.",
+   "instruct": "Whisper softly, as if telling a secret.",
+   "note": "Same sentence: whispered/breathy?",
+   "voice": "Aiden"
+  },
+  {
+   "id": "en_angry",
+   "lang": "en",
+   "text": "I told you three times already that the server must not be restarted during the backup.",
+   "instruct": "Speak angrily and sharply, clearly annoyed.",
+   "note": "Emotion: angry, emphatic.",
+   "voice": "Aiden"
+  },
+  {
+   "id": "en_voice_ryan",
+   "lang": "en",
+   "voice": "Ryan",
+   "text": "Gradient descent follows the steepest downhill direction, step by step, until the error barely changes anymore.",
+   "note": "Second English preset voice for comparison."
+  },
+  {
+   "id": "de_schnell_speed",
+   "lang": "de",
+   "speed": 1.3,
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "note": "speed=1.3: applied as the direction 'Sprich deutlich schneller' (no resampling).",
+   "voice": "Dylan"
+  },
+  {
+   "id": "de_klon_mann",
+   "lang": "de",
+   "voice": "ref:de_male_1",
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "note": "German default voice: clone of the synthetic reference de_male_1 (0.6B Base). Compare with de_neutral (preset Dylan): does it sound more German?"
+  },
+  {
+   "id": "de_klon_frau",
+   "lang": "de",
+   "voice": "ref:de_female_1",
+   "text": "Gradientenabstieg folgt Schritt für Schritt der steilsten Richtung bergab, bis sich der Fehler kaum noch verändert.",
+   "note": "Clone of the reference de_female_1, female German alternative."
+  },
+  {
+   "id": "en_klon_frau",
+   "lang": "en",
+   "voice": "ref:en_female_1",
+   "text": "Gradient descent follows the steepest downhill direction, step by step, until the error barely changes anymore.",
+   "note": "Clone of the reference en_female_1 (vs. preset Aiden in en_neutral)."
+  }
+ ]
+}

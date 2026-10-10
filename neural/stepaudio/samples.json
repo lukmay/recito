@@ -1,0 +1,16 @@
+{
+  "_doc": "Step-Audio-EditX: the same sentences without and with inline tags or an edit pass (instruct), in English and German. Tags go in square brackets in the text; instruct e.g. 'emotion=happy', 'style=whisper x2', 'speed=faster', 'para'.",
+  "samples": [
+    {"id": "en_plain", "lang": "en", "text": "I finally finished the report, and honestly, I did not expect it to work on the first try.", "note": "Reference without tags, plain clone mode."},
+    {"id": "en_tags", "lang": "en", "text": "I finally finished the report [Sigh], and honestly [Laughter], I did not expect it to work on the first try.", "note": "Same sentence, tags directly in clone mode: are the sigh and laughter audible at that spot?"},
+    {"id": "en_tags_edit", "lang": "en", "text": "I finally finished the report [Sigh], and honestly [Laughter], I did not expect it to work on the first try.", "instruct": "para", "note": "Like en_tags, but the official route: clone without tags first, then a paralinguistic edit pass. No streaming, much slower."},
+    {"id": "en_happy", "lang": "en", "text": "I finally finished the report, and honestly, I did not expect it to work on the first try.", "instruct": "emotion=happy", "note": "Emotion edit pass: happier than en_plain?"},
+    {"id": "en_whisper", "lang": "en", "text": "I finally finished the report, and honestly, I did not expect it to work on the first try.", "instruct": "style=whisper x2", "note": "Two whisper edit passes (StepFun recommends more than one iteration)."},
+    {"id": "en_fast", "lang": "en", "text": "I finally finished the report, and honestly, I did not expect it to work on the first try.", "speed": 1.25, "note": "speed=1.25 via mel interpolation in the vocoder (pitch is kept), no extra pass."},
+    {"id": "de_plain", "lang": "de", "text": "Ich habe den Bericht endlich fertig, und ehrlich gesagt hätte ich nicht gedacht, dass es auf Anhieb klappt.", "note": "German without tags. The model is not trained on German: listen for pronunciation and accent."},
+    {"id": "de_tags", "lang": "de", "text": "Ich habe den Bericht endlich fertig [Sigh], und ehrlich gesagt [Laughter], hätte ich nicht gedacht, dass es auf Anhieb klappt.", "note": "German with tags in clone mode."},
+    {"id": "de_happy", "lang": "de", "text": "Ich habe den Bericht endlich fertig, und ehrlich gesagt hätte ich nicht gedacht, dass es auf Anhieb klappt.", "instruct": "emotion=happy", "note": "German with an emotion edit; does the second pass hurt pronunciation?"},
+    {"id": "de_fach", "lang": "de", "text": "Ein neuronales Netz lernt, indem es den Fehler über viele Beispiele hinweg schrittweise verringert.", "note": "Typical technical sentence for reading aloud, without tags."},
+    {"id": "en_fach_news", "lang": "en", "text": "A neural network learns by gradually reducing its error across many training examples.", "instruct": "style=news", "note": "English technical sentence with the style edit 'news' (news anchor)."}
+  ]
+}

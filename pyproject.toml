@@ -1,0 +1,29 @@
+# Tool configuration only; the app is deployed by install.sh / install.ps1.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["bin", "neural"]
+addopts = "-ra"
+markers = ["shells: runs the AI assistant prompt commands in real shells (skips missing shells)"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-include = ["bin/piper-read-say"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = [
+    "B008",   # function calls in argument defaults
+    "E731",   # lambda assignments (engine tables)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts and model servers set up sys.path or stdout before importing.
+"neural/**/*.py" = ["E402"]
+"bin/piper-read-daemon.py" = ["E402"]
+# Embedded JavaScript, HTML and CSS.
+"bin/tts_reader.py" = ["E501"]
+# Embedded instructions for AI assistants (Markdown paragraphs).
+"bin/tts_rules.py" = ["E501"]
+"neural/gallery.py" = ["E501"]

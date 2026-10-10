@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Microsoft Speech Platform voices (Hedda/ZiraPro) through balcon under Wine
+# (portable, ~/.local/share/mssp). Called by piper-read-daemon as mssp_cmd.
+#
+# Setup (Linux only, no root), everything under ~/.local/share/mssp:
+#   wine/    portable Kron4ek wine-11.x-amd64-wow64
+#   prefix/  win64 prefix with Speech Platform Runtime v11 (x86) + SDK,
+#            voices Hedda (de-DE) and ZiraPro (en-US)
+#   balcon/  balcon.exe + libsamplerate.dll (repo xeden3/MSSpeechServer)
+# Required in the prefix:
+#   1. wine reg add "HKCU\Software\Wine\DllOverrides" /v msttsengine /d native /f
+#   2. NaturalLanguage6.dll in .../Speech/TTS/v11.0/ and windows/syswow64/
+#   3. native msxml3 (winetricks recipe, DllOverride msxml3=native)
+# Install:
+#   install -m 0755 balcon-mssp ~/.local/bin/
+#   install -m 0644 mssp-warm.service ~/.config/systemd/user/
+#   systemctl --user enable --now mssp-warm.service
+# voices.conf: engine=mssp, mssp_cmd=/home/<user>/.local/bin/balcon-mssp
+export WINEPREFIX="$HOME/.local/share/mssp/prefix"
+export WINEDEBUG=-all
+# Without DISPLAY/WAYLAND_DISPLAY Wine loads no graphics driver. balcon needs no
+# GUI, and no window or taskbar entry flashes up per sentence.
+unset DISPLAY WAYLAND_DISPLAY
+cd "$HOME/.local/share/mssp/balcon"
+exec "$HOME/.local/share/mssp/wine/bin/wine" balcon.exe "$@"

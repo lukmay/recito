@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""
+piper-read-say: client for the piper-read daemon (bound to KDE hotkeys).
+
+  piper-read-say de                -> primary selection (mouse selection) with voice 'de'
+  piper-read-say en fast           -> English, faster speed
+  piper-read-say de --clip         -> clipboard instead of primary selection
+  echo "text" | piper-read-say de --stdin   -> text from stdin (for OCR)
+  piper-read-say pause             -> pause/resume playback (toggle)
+  piper-read-say stop              -> stop the current output
+
+Positional argument = voice key (default 'de'); 'fast' = faster speed.
+"""
+
+import json
+import sys
+
+import tts_config
+import tts_platform
+
+CONF_PATH = tts_platform.piper_dir() / "voices.conf"
+
+
+def _conf_float(key: str, default: float) -> float:
+    """Speed value from voices.conf (shared source, editable in the tray)."""
+    try:
+        return float(tts_config.read(CONF_PATH)[key])
+    except (KeyError, OSError, ValueError):
+        return default
+
+
+NORMAL_LENGTH_SCALE = _conf_float("speed_normal", 1.0)
+FAST_LENGTH_SCALE = _conf_float("speed_fast", 0.8)
+
+
+def send(payload: bytes):
+    try:
+        s = tts_platform.ipc_connect(timeout=3)
+        s.sendall(payload)
+        s.shutdown(1)            # SHUT_WR
+        s.close()
+    except OSError as exc:
+        # Daemon not reachable: tell the user instead of failing silently
+        tts_platform.notify("Piper-TTS", f"Daemon nicht erreichbar ({exc}).")
+
+
+def main():
+    args = sys.argv[1:]
+    if "pause" in args or "toggle" in args:
+        send(b'{"cmd": "pause"}')
+        return
+    if "stop" in args:
+        send(b'{"cmd": "stop"}')
+        return
+
+    voice = "de"
+    length_scale = NORMAL_LENGTH_SCALE
+    source = "primary"
+    for a in args:
+        if a == "fast":
+            length_scale = FAST_LENGTH_SCALE
+        elif a == "--clip":
+            source = "clip"
+        elif a == "--stdin":
+            source = "stdin"
+        elif a == "--primary":
+            source = "primary"
+        elif not a.startswith("-"):
+            voice = a
+
+    if source == "stdin":
+        text = sys.stdin.read()
+    else:
+        text = tts_platform.get_selection(primary=(source == "primary"))
+
+    if text.strip():
+        send(json.dumps(
+            {"text": text, "voice": voice, "length_scale": length_scale}
+        ).encode("utf-8"))
+
+
+if __name__ == "__main__":
+    main()

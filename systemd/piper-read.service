@@ -1,0 +1,11 @@
+[Unit]
+Description=Piper read-aloud daemon (warm voices, clipboard and OCR TTS)
+After=default.target
+
+[Service]
+ExecStart=%h/.local/share/piper-venv/bin/python %h/.local/bin/piper-read-daemon.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

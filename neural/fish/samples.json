@@ -1,0 +1,29 @@
+{
+  "_doc": "Fish Audio S2 Pro: the same sentences without and with inline tags in square brackets. Tags go directly into the text where they should take effect; free text such as [whisper in small voice] works too.",
+  "samples": [
+    {"id": "de_plain", "lang": "de", "text": "Ich muss dir etwas verraten. Das Ergebnis ist besser, als wir alle gedacht haben. Ehrlich gesagt hätte ich das nie erwartet.",
+     "note": "Reference without tags: neutral reading voice."},
+    {"id": "de_tags", "lang": "de", "text": "[whisper] Ich muss dir etwas verraten. [excited] Das Ergebnis ist besser, als wir alle gedacht haben! [laughing] Ehrlich gesagt hätte ich das nie erwartet.",
+     "note": "Same text: whispered first, then excited and louder, laughter in the voice at the end."},
+    {"id": "de_sad_plain", "lang": "de", "text": "Der Zug ist schon weg. Jetzt sitze ich hier allein auf dem Bahnsteig und warte auf den nächsten.",
+     "note": "Reference without tags."},
+    {"id": "de_sad_tags", "lang": "de", "text": "[sad] Der Zug ist schon weg. [sigh] Jetzt sitze ich hier allein auf dem Bahnsteig [pause] und warte auf den nächsten.",
+     "note": "Sad tone, audible sigh, clear pause before the end of the sentence."},
+    {"id": "de_vorlesen_tags", "lang": "de", "text": "Die KL-Divergenz ist nicht symmetrisch. [emphasis] Genau deshalb [pause] ist die Reihenfolge der Argumente wichtig.",
+     "note": "Read-aloud scenario: emphasis on 'Genau deshalb', then a pause."},
+    {"id": "de_instruct", "lang": "de", "text": "Willkommen zur heutigen Vorlesung über Erfüllbarkeitsprüfung.", "instruct": "professional broadcast tone",
+     "note": "Style direction via the instruct field (prepended as [professional broadcast tone]): announcer or radio tone."},
+    {"id": "en_plain", "lang": "en", "text": "I have to tell you something. The result is better than any of us expected. Honestly, I never saw that coming.",
+     "note": "Reference without tags."},
+    {"id": "en_tags", "lang": "en", "text": "[whisper] I have to tell you something. [excited] The result is better than any of us expected! [laughing] Honestly, I never saw that coming.",
+     "note": "Same text: whispered start, then excited, then laughing."},
+    {"id": "en_sad_plain", "lang": "en", "text": "The train has already left. Now I'm sitting here alone on the platform, waiting for the next one.",
+     "note": "Reference without tags."},
+    {"id": "en_sad_tags", "lang": "en", "text": "[sad] The train has already left. [sigh] Now I'm sitting here alone on the platform, [pause] waiting for the next one.",
+     "note": "Sad tone, audible sigh, clear pause."},
+    {"id": "en_shout_tags", "lang": "en", "text": "[low voice] Stay quiet, they might hear us. [shouting] Run, now!",
+     "note": "Contrast within one line: low voice, then shouting."},
+    {"id": "en_freeform", "lang": "en", "text": "[whisper in small voice] This is a secret. [pitch up] But this part is much higher!",
+     "note": "Free-form tags: tiny whisper, then raised pitch."}
+  ]
+}
