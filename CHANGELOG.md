@@ -2,6 +2,13 @@
 
 Each release has a section here. The section of the version in `VERSION` becomes part of the release notes on GitHub.
 
+## 1.2.1
+
+Fixes for the follow-along window.
+
+- The colored mark behind the word being heard sat a few letters too far right, one letter more after every line. Text copied on Windows ends each line with a carriage return and a line feed. The daemon counted both as characters while the window counted one line break, so the positions drifted apart. The window now converts every position, and it also counts an emoji the way the daemon does.
+- Below 100 percent background opacity, a gray box covered the text. It is gone, and the letters now get a thin outline in the window's background color, which keeps them readable over whatever shows through.
+
 ## 1.2.0
 
 Recito is now called Recito TTS, so that people who search for a text-to-speech app can find it. While it reads, a new follow-along window shows the text and marks the word you hear.
