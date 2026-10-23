@@ -2,6 +2,17 @@
 
 Each release has a section here. The section of the version in `VERSION` becomes part of the release notes on GitHub.
 
+## 1.2.0
+
+Recito is now called Recito TTS, so that people who search for a text-to-speech app can find it. While it reads, a new follow-along window shows the text and marks the word you hear.
+
+- The follow-along window floats above other windows without taking the focus, scrolls with the voice and fades out within a second after the text ends. Its look follows Spectrum 2, the design system of Adobe.
+- Seven mark colors are available from the color button in the window. To turn the window off, use the switch on the speed page of the settings window or the entry in the tray menu.
+- In the Start menu, Recito now appears as "Recito TTS", and installing removes the old "Recito" shortcuts. Linux app launchers also find Recito TTS under "TTS", "text to speech" and "read aloud".
+- Until the last audio has played, the tray icon now shows "speaking". Before, it switched to idle while up to two seconds were still playing.
+- The background process that reads aloud (the daemon) no longer hangs when another program keeps its connection open, because each message now has to arrive within three seconds.
+- Browser pages can now send text to Recito as an HTTP request.
+
 ## 1.1.0
 
 Installing Recito no longer needs Python, a terminal or administrator rights.

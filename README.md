@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-lockup-dark.svg">
-    <img src="assets/brand/logo-lockup.svg" alt="Recito" height="72">
+    <img src="assets/brand/logo-lockup.svg" alt="Recito TTS" height="72">
   </picture>
 </p>
 
@@ -14,7 +14,7 @@ For Windows 11 and Linux (Fedora KDE Plasma 6, GNOME, Ubuntu).
 
 https://github.com/user-attachments/assets/b08ddc0a-82ed-40f0-a7fc-da29e99af1b9
 
-Recito reads the text you select in any app. Press a hotkey and the first sentence plays while the rest is still being synthesized. Draw a rectangle on the screen and Recito reads the text it recognizes there (OCR).
+Recito TTS is a free, open-source text-to-speech app that reads the text you select in any app. Press a hotkey and the first sentence plays while the rest is still being synthesized. Draw a rectangle on the screen and Recito reads the text it recognizes there (OCR).
 
 ## Why Recito
 
@@ -53,6 +53,8 @@ Recito reads the text you select in any app. Press a hotkey and the first senten
     <img src="docs/images/rules-light.webp" alt="Text clean-up page with rule groups and a Try it box showing a text before and after" width="720">
   </picture>
 </p>
+
+**It shows the word you hear.** While Recito reads, the follow-along window floats above your other windows, shows the text and marks the word being spoken, so your eyes keep up with the voice. The window never takes the focus, so your cursor and selection stay in your app. Recito estimates each word's time from the audio of its sentence, so on long words the mark can run a little ahead or behind. The color button in the window picks one of seven mark colors, and a switch in the settings window turns the follow-along window off.
 
 ## Quick start
 
