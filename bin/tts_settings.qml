@@ -288,6 +288,7 @@ ApplicationWindow {
             speedNormal: speedNormal.value, speedFast: speedFast.value,
             pause: pauseSlider.value, voices: voices, instructs: instructs, hotkeys: keys,
             readLangs: readLangs, follow: followSwitch.checked,
+            followOpacity: followOpacity.value,
             el: Object.assign({}, elCurrent, { model: elModel, cache: elCacheSwitch.checked })
         })
     }
@@ -648,6 +649,7 @@ ApplicationWindow {
         property string minText: ""
         property string maxText: ""
         property var format: function (u) { return Tr.num(u, 2) }
+        property bool probeable: true
         function setValue(v) { sl.value = sr.toUi(v) }
         signal probe()
         Layout.fillWidth: true
@@ -673,7 +675,8 @@ ApplicationWindow {
             text: sr.format(sl.value); Layout.preferredWidth: 60
             horizontalAlignment: Text.AlignRight; color: Theme.colorOnSurface
         }
-        TonalButton { text: Tr.t("common.listen"); glyph: ic.play; onClicked: sr.probe() }
+        TonalButton { visible: sr.probeable
+                      text: Tr.t("common.listen"); glyph: ic.play; onClicked: sr.probe() }
     }
 
     // One row of the permission checklist
@@ -1245,6 +1248,14 @@ ApplicationWindow {
                             id: followSwitch
                             checked: win.init.follow
                             title: Tr.t("tray.follow")
+                        }
+                        SliderRow {
+                            id: followOpacity
+                            enabled: followSwitch.checked
+                            label: Tr.t("follow.opacity"); from: 20; to: 100; step: 5
+                            format: function (v) { return Tr.t("follow.percent", { value: Math.round(v) }) }
+                            initial: win.init.followOpacity
+                            probeable: false
                         }
                     }
                 }

@@ -5,11 +5,13 @@ the eyes can follow the voice.
 
 The window never takes the focus, so the selection and the cursor stay in
 the app the text came from. It opens when a job starts, scrolls along with
-the voice and fades out right after the end, at once after a stop.
-Scrolling by hand stops the automatic scrolling for a moment. The close
-button hides it until the next text; the settings window and the tray menu
-turn it off (follow_window=off in voices.conf).
-The color button picks the mark color (follow_color in voices.conf).
+the voice and fades out right after the end, at once after a stop. While
+reading is paused it fades out and comes back on resume. Scrolling by hand
+stops the automatic scrolling for a moment. The close button hides it until
+the next text; the settings window and the tray menu turn it off
+(follow_window=off in voices.conf). The look button opens the mark color
+(follow_color) and the background opacity (follow_opacity, in percent; text
+and mark stay opaque).
 
 The look follows Adobe Spectrum 2 (tokens in tts_theme): a popover with the
 elevated shadow, quiet round action buttons with line icons, the Spectrum
@@ -36,11 +38,12 @@ from PySide6.QtGui import (QColor, QCursor, QFont, QGuiApplication, QImage, QPai
                            QPainterPath, QPen, QPixmap, QTextBlockFormat, QTextCharFormat,
                            QTextCursor)
 from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsBlurEffect,
+                               QGraphicsDropShadowEffect,
                                QGraphicsPixmapItem, QGraphicsScene, QHBoxLayout, QLabel,
-                               QSizeGrip, QTextBrowser, QTextEdit, QVBoxLayout, QWidget)
+                               QSizeGrip, QSlider, QTextBrowser, QTextEdit, QVBoxLayout,
+                               QWidget)
 
 HIDE_AFTER_MS = 800             # after the end of a text
-FADE_MS = 150                   # Spectrum's short exit motion
 USER_SCROLL_HOLD = 3.0          # seconds without automatic scrolling after the wheel
 DEFAULT_SIZE = (720, 220)
 
@@ -60,6 +63,16 @@ def enabled() -> bool:
 def mark_name() -> str:
     name = tts_platform.conf_read().get("follow_color", tts_theme.DEFAULT_MARK).lower()
     return name if name in tts_theme.MARKS else tts_theme.DEFAULT_MARK
+
+
+def opacity() -> int:
+    """Background opacity in percent, within tts_theme.OPACITY."""
+    o = tts_theme.OPACITY
+    try:
+        value = int(tts_platform.conf_read().get("follow_opacity", o["default"]))
+    except ValueError:
+        value = o["default"]
+    return max(o["min"], min(o["max"], value))
 
 
 def query_follow(job, timeout=1.0):
@@ -333,6 +346,7 @@ class FollowWindow(QWidget):
         self._shadow_key = None
         self._shadow_pix = None
         self._mark = mark_name()
+        self._opacity = opacity()
         self.colors = tts_theme.s2_colors()
         self.mark_color = tts_theme.mark_color(self._mark)
         sp, size = tts_theme.SPACE, tts_theme.SIZE
@@ -341,7 +355,7 @@ class FollowWindow(QWidget):
         self.btn_color.setCheckable(True)
         self.btn_color.toggled.connect(self._toggle_picker)
         self.btn_pause = _ActionButton("pause", self)
-        self.btn_pause.clicked.connect(lambda: self._send({"cmd": "pause"}))
+        self.btn_pause.clicked.connect(self._pause)
         self.btn_stop = _ActionButton("stop", self)
         self.btn_stop.clicked.connect(self._stop)
         self.btn_close = _ActionButton("close", self)
@@ -365,18 +379,45 @@ class FollowWindow(QWidget):
         self.head.setCursor(Qt.SizeAllCursor)
         self.head.installEventFilter(self)
 
-        # Swatch picker, shown under the header by the color button
-        picker = QHBoxLayout()
-        picker.setContentsMargins(0, 0, 0, 0)
-        picker.setSpacing(sp["xs"])
+        # Look panel under the header (look button): swatch picker for the
+        # mark color and a slider for the background opacity
+        swatch_row = QHBoxLayout()
+        swatch_row.setContentsMargins(0, 0, 0, 0)
+        swatch_row.setSpacing(sp["xs"])
         self.swatches = []
         for name in tts_theme.MARKS:
             s = _Swatch(name, self)
             s.setChecked(name == self._mark)
             s.clicked.connect(lambda _=False, n=name: self._pick(n))
             self.swatches.append(s)
-            picker.addWidget(s)
-        picker.addStretch(1)
+            swatch_row.addWidget(s)
+        swatch_row.addStretch(1)
+        o = tts_theme.OPACITY
+        self.opacity_label = QLabel(tr("follow.opacity"))
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(o["min"], o["max"])
+        self.slider.setSingleStep(o["step"])
+        self.slider.setPageStep(o["step"] * 2)
+        self.slider.setValue(self._opacity)
+        self.slider.setFocusPolicy(Qt.NoFocus)
+        self.slider.setCursor(Qt.PointingHandCursor)
+        self.slider.setFixedHeight(size["control"])
+        self.slider.setAccessibleName(tr("follow.opacity"))
+        self.slider.valueChanged.connect(self._set_opacity)
+        self.opacity_value = QLabel()
+        self.opacity_value.setMinimumWidth(size["control"] + sp["s"])
+        self.opacity_value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        slider_row = QHBoxLayout()
+        slider_row.setContentsMargins(0, 0, 0, 0)
+        slider_row.setSpacing(sp["m"])
+        slider_row.addWidget(self.opacity_label)
+        slider_row.addWidget(self.slider, 1)
+        slider_row.addWidget(self.opacity_value)
+        picker = QVBoxLayout()
+        picker.setContentsMargins(0, 0, 0, 0)
+        picker.setSpacing(sp["xs"])
+        picker.addLayout(swatch_row)
+        picker.addLayout(slider_row)
         self.picker = QWidget()
         self.picker.setLayout(picker)
         self.picker.hide()
@@ -413,13 +454,11 @@ class FollowWindow(QWidget):
         self._hide_timer = QTimer(self, singleShot=True, interval=HIDE_AFTER_MS,
                                   timeout=self._hide_if_idle)
         self._fade = QPropertyAnimation(self, b"windowOpacity", self)
-        self._fade.setDuration(FADE_MS)
-        self._fade.setEasingCurve(QEasingCurve.InCubic)
-        self._fade.setStartValue(1.0)
-        self._fade.setEndValue(0.0)
-        self._fade.finished.connect(self._faded)
+        self._fade.finished.connect(self._fade_done)
         self._save_timer = QTimer(self, singleShot=True, interval=600,
                                   timeout=self._save_geometry)
+        self._opacity_timer = QTimer(self, singleShot=True, interval=400,
+                                     timeout=self._save_opacity)
         self._apply_colors()
         try:
             QGuiApplication.styleHints().colorSchemeChanged.connect(self._on_scheme)
@@ -439,7 +478,15 @@ QScrollBar::handle:vertical {{ background: {c['pressed']}; border-radius: {sp['x
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
 QSizeGrip {{ image: none; width: {sp['l']}px; height: {sp['l']}px; }}
+QSlider::groove:horizontal {{ height: 2px; background: {c['pressed']}; border-radius: 1px; }}
+QSlider::sub-page:horizontal {{ height: 2px; background: {c['content']}; border-radius: 1px; }}
+QSlider::handle:horizontal {{ width: {sp['m']}px; height: {sp['m']}px;
+                             margin: -{sp['s'] - 1}px 0; border-radius: {sp['s']}px;
+                             background: {c['elevated']}; border: 2px solid {c['content']}; }}
+QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
 """)
+        self.opacity_value.setText(tr("follow.percent", value=self._opacity))
+        self._halo()
         self.mark_color = tts_theme.mark_color(self._mark)
         self.view.mark_color = QColor(self.mark_color)
         self._tooltips()
@@ -451,7 +498,7 @@ QSizeGrip {{ image: none; width: {sp['l']}px; height: {sp['l']}px; }}
         self.update()
 
     def _tooltips(self):
-        self.btn_color.setToolTip(tr("follow.color"))
+        self.btn_color.setToolTip(tr("follow.look"))
         self.btn_pause.setToolTip(tr("follow.resume") if self._state == "paused"
                                   else tr("follow.pause"))
         self.btn_stop.setToolTip(tr("follow.stop"))
@@ -482,18 +529,54 @@ QSizeGrip {{ image: none; width: {sp['l']}px; height: {sp['l']}px; }}
         c = self.colors
         panel = self._panel_rect()
         r = tts_theme.RADIUS["window"]
+        alpha = self._opacity / 100
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
+        p.setOpacity(alpha)                 # the shadow fades with the background
         for blur, pix in self._shadow_pix or ():
             p.drawPixmap(QPointF(panel.x() - blur * 2, panel.y() - blur * 2), pix)
-        p.setBrush(QColor(c["elevated"]))
+        p.setOpacity(1.0)
+        bg = QColor(c["elevated"])
+        bg.setAlphaF(alpha)
+        p.setBrush(bg)
         border = QColor(c["border"])
+        if alpha < 1 and not border.alpha():
+            border = QColor(c["swatch_border"])   # a see-through panel keeps its edge
         p.setPen(QPen(border, 1) if border.alpha() else Qt.NoPen)
         p.drawRoundedRect(panel.adjusted(0.5, 0.5, -0.5, -0.5), r, r)
 
     # --- mark color ------------------------------------------------------- #
     def _toggle_picker(self, on):
         self.picker.setVisible(on)
+
+    def _set_opacity(self, value):
+        o = tts_theme.OPACITY
+        value = round(value / o["step"]) * o["step"]
+        if value == self._opacity:
+            return
+        self._opacity = value
+        self.opacity_value.setText(tr("follow.percent", value=value))
+        self._halo()
+        self.update()
+        self._opacity_timer.start()           # write once the slider rests
+
+    def _halo(self):
+        """A see-through panel lets the app behind it show through the text.
+        A soft glow in the panel color around the glyphs keeps the text
+        readable on any background; an opaque panel needs none."""
+        if self._opacity >= tts_theme.OPACITY["max"]:
+            self.view.setGraphicsEffect(None)
+            return
+        effect = self.view.graphicsEffect()
+        if not isinstance(effect, QGraphicsDropShadowEffect):
+            effect = QGraphicsDropShadowEffect(self.view)
+            effect.setOffset(0, 0)
+            effect.setBlurRadius(tts_theme.HALO_BLUR)
+            self.view.setGraphicsEffect(effect)
+        effect.setColor(QColor(self.colors["elevated"]))
+
+    def _save_opacity(self):
+        tts_platform.conf_write({"follow_opacity": str(self._opacity)})
 
     def _pick(self, name):
         self._mark = name
@@ -508,8 +591,9 @@ QSizeGrip {{ image: none; width: {sp['l']}px; height: {sp['l']}px; }}
         state, job = reply.get("state", "idle"), reply.get("job")
         if "text" in reply and job is not None:
             self._set_text(reply["text"])
-            # The switch can change in the settings window at any time
+            # The settings window can change these at any time
             self._job, self._dismissed = job, not enabled()
+            self._sync_look()
         if job is None and state != "idle":
             return                      # a preview from the settings window
         if state != self._state:
@@ -522,12 +606,14 @@ QSizeGrip {{ image: none; width: {sp['l']}px; height: {sp['l']}px; }}
             self._span = tuple(span)
             self._highlight()
         if state == "idle":
-            if self.isVisible() and not self._hide_timer.isActive():
+            if self._shown() and not self._hide_timer.isActive():
                 self._hide_timer.start()
             return
         self._hide_timer.stop()
-        if not self.isVisible() and not self._dismissed and self._job is not None:
-            self._show()
+        if state == "paused":
+            self._fade_out()
+        elif not self._dismissed and self._job is not None:
+            self._fade_in()
 
     def _set_text(self, text):
         self._span = None
@@ -593,14 +679,54 @@ QSizeGrip {{ image: none; width: {sp['l']}px; height: {sp['l']}px; }}
         self._scroll_anim.start()
 
     # --- showing and hiding ----------------------------------------------- #
-    def _show(self):
+    def _sync_look(self):
+        """Mark color and opacity as stored, also after the settings window."""
+        name, value = mark_name(), opacity()
+        if value != self._opacity:
+            self.slider.blockSignals(True)
+            self.slider.setValue(value)
+            self.slider.blockSignals(False)
+            self._opacity = value
+        if name != self._mark:
+            self._mark = name
+            for s in self.swatches:
+                s.setChecked(s.name == name)
+        self._apply_colors()
+
+    def _shown(self) -> bool:
+        """Visible and not on the way out."""
+        return self.isVisible() and not (
+            self._fade.state() == QAbstractAnimation.Running and self._fade.endValue() == 0.0)
+
+    def _animate(self, to: float, ms: int, curve):
+        self._fade.stop()
+        self._fade.setDuration(ms)
+        self._fade.setEasingCurve(curve)
+        self._fade.setStartValue(self.windowOpacity())
+        self._fade.setEndValue(to)
+        self._fade.start()
+
+    def _fade_in(self):
+        if self._shown():
+            return
         if not self._placed:
             self._place()
             self._placed = True
-        self._fade.stop()
-        self.setWindowOpacity(1.0)
-        self.show()
-        self.raise_()
+        if not self.isVisible():
+            self.setWindowOpacity(0.0)
+            self.show()
+            self.raise_()
+        self._animate(1.0, tts_theme.FADE_IN_MS, QEasingCurve.OutCubic)
+
+    def _fade_out(self):
+        if self._shown():
+            self._animate(0.0, tts_theme.FADE_OUT_MS, QEasingCurve.InCubic)
+
+    def _fade_done(self):
+        if self._fade.endValue() == 0.0:
+            self.btn_color.setChecked(False)
+            self.hide()
+            self.setWindowOpacity(1.0)
 
     def _place(self):
         """Last position if it is still on a screen, else bottom center of the
@@ -629,23 +755,22 @@ QSizeGrip {{ image: none; width: {sp['l']}px; height: {sp['l']}px; }}
         if self.underMouse():           # someone is still looking at it
             self._hide_timer.start()
             return
-        self._fade.start()
+        self._fade_out()
 
-    def _faded(self):
-        self.btn_color.setChecked(False)
-        self.hide()
-        self.setWindowOpacity(1.0)
+    def _pause(self):
+        self._send({"cmd": "pause"})
+        if self._state == "speaking":   # respond at once, the poll confirms
+            self._fade_out()
 
     def _stop(self):
         self._send({"cmd": "stop"})
         self._hide_timer.stop()
-        self._fade.start()
+        self._fade_out()
 
     def _dismiss(self):
         self._dismissed = True
         self._hide_timer.stop()
-        self._fade.stop()
-        self._faded()
+        self._fade_out()
 
     # --- moving, resizing, scrolling -------------------------------------- #
     def eventFilter(self, obj, ev):

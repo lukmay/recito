@@ -6,8 +6,9 @@ Each release has a section here. The section of the version in `VERSION` becomes
 
 Recito is now called Recito TTS, so that people who search for a text-to-speech app can find it. While it reads, a new follow-along window shows the text and marks the word you hear.
 
-- The follow-along window floats above other windows without taking the focus, scrolls with the voice and fades out within a second after the text ends. Its look follows Spectrum 2, the design system of Adobe.
-- Seven mark colors are available from the color button in the window. To turn the window off, use the switch on the speed page of the settings window or the entry in the tray menu.
+- The follow-along window floats above other windows without taking the focus and scrolls with the voice. It fades out within a second after the text ends, and it hides while reading is paused. Its look follows Spectrum 2, the design system of Adobe.
+- The look button in the window has seven mark colors and a slider for the background opacity, from 20 to 100 percent. Text and mark stay opaque, and below 100 percent a soft glow keeps the text readable. The settings window has the same slider.
+- The settings window (speed page) and the tray menu each have a switch that turns the window off.
 - In the Start menu, Recito now appears as "Recito TTS", and installing removes the old "Recito" shortcuts. Linux app launchers also find Recito TTS under "TTS", "text to speech" and "read aloud".
 - Until the last audio has played, the tray icon now shows "speaking". Before, it switched to idle while up to two seconds were still playing.
 - The background process that reads aloud (the daemon) no longer hangs when another program keeps its connection open, because each message now has to arrive within three seconds.

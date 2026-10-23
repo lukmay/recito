@@ -82,6 +82,12 @@ RADIUS = {"mark": 4, "swatch": 8, "window": 16}   # small, medium, extra-large
 SIZE = {"control": 32, "icon": 20, "swatch": 24, "shadow": 24}
 TYPE = {"title": 14, "reading": 18}
 READING_LINE_HEIGHT = 150           # percent of the font height
+# Background opacity of the follow window in percent; text and mark stay opaque
+OPACITY = {"min": 20, "max": 100, "step": 5, "default": 100}
+HALO_BLUR = 6                       # glow around the text of a see-through panel
+# Motion: Spectrum's quick durations, shorter on the way out
+FADE_IN_MS = 120
+FADE_OUT_MS = 140
 ICON_STROKE = 1.5
 
 
