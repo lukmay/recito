@@ -22,8 +22,9 @@ from pathlib import Path
 import tts_icons
 import tts_platform
 
-LNK_NAME = "Recito.lnk"
-LEGACY_LNK_NAMES = ("TTS-Vorlesen.lnk",)        # before the rename to Recito
+LNK_NAME = "Recito TTS.lnk"
+# Names before the rename to Recito and before "Recito TTS"
+LEGACY_LNK_NAMES = ("TTS-Vorlesen.lnk", "Recito.lnk")
 
 
 def _programs_dir() -> Path:
@@ -75,10 +76,10 @@ def set_enabled(on: bool):
 
 
 def start_menu_shortcut(lnk=None):
-    """Start menu entry 'Recito' (searchable), or at lnk."""
+    """Start menu entry 'Recito TTS' (searchable), or at lnk."""
     remove_legacy()
     create_shortcut(Path(lnk) if lnk else _programs_dir() / LNK_NAME,
-                    description="Recito (tray)")
+                    description="Recito TTS: text to speech (tray)")
 
 
 def _ps_quote(value) -> str:

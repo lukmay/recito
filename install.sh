@@ -212,6 +212,7 @@ install -m 0644 "$REPO/bin/tts_rules.py" "$BIN/"      # the user's text rules
 install -m 0644 "$REPO/bin/tts_platform.py" "$BIN/"   # OS abstraction (audio, IPC)
 install -m 0644 "$REPO/bin/tts_config.py" "$BIN/"     # voices.conf parsing
 install -m 0644 "$REPO/bin/tts_audio.py" "$BIN/"      # loudness and time stretch
+install -m 0644 "$REPO/bin/tts_timing.py" "$BIN/"     # which word is being heard
 install -m 0644 "$REPO/bin/tts_i18n.py" "$BIN/"       # UI translations
 install -m 0644 "$REPO/bin/tts_langs.py" "$BIN/"      # reading languages, Piper voice download
 # tts-rules: command line for the text rules (for power users and AI assistants).
@@ -221,7 +222,7 @@ install -m 0644 "$REPO/bin/tts_langs.py" "$BIN/"      # reading languages, Piper
 install -D -m 0644 -t "$BIN/i18n" "$REPO"/bin/i18n/*
 install -D -m 0644 -t "$BIN/ui" "$REPO"/bin/ui/*
 install -m 0644 "$REPO/bin/tts_theme.py" "$REPO/bin/tts_elevenlabs.py" "$REPO/bin/tts_settings.py" "$REPO/bin/tts_settings.qml" \
-    "$REPO/bin/tts_reader.py" "$BIN/"   # settings and ElevenReader windows
+    "$REPO/bin/tts_reader.py" "$REPO/bin/tts_follow.py" "$BIN/"   # settings, ElevenReader and follow windows
 install -D -m 0644 -t "$BIN/fonts" "$REPO"/bin/fonts/*   # icon font (Material Icons, Apache 2.0)
 install -m 0644 "$REPO/bin/tts_icons.py" "$BIN/"      # app and tray icon lookup
 install -m 0644 "$REPO/VERSION" "$BIN/recito-version.txt"   # shown in the settings window and tray tooltip
@@ -296,7 +297,9 @@ bash "$REPO/tools/install-icons.sh" --remove-legacy
 cat > "$APPS/recito.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Recito
+Name=Recito TTS
+GenericName=Text to speech
+Keywords=TTS;text to speech;read aloud;speech;voice;screen reader;Vorlesen;
 Comment=Configure read-aloud voices, speed, pauses and hotkeys
 Exec=$VENV/bin/python $BIN/tts-tray.py
 Icon=recito

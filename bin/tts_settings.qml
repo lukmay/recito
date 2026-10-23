@@ -287,7 +287,7 @@ ApplicationWindow {
             engine: engine, langDetect: perSentence.checked ? "sentence" : "text",
             speedNormal: speedNormal.value, speedFast: speedFast.value,
             pause: pauseSlider.value, voices: voices, instructs: instructs, hotkeys: keys,
-            readLangs: readLangs,
+            readLangs: readLangs, follow: followSwitch.checked,
             el: Object.assign({}, elCurrent, { model: elModel, cache: elCacheSwitch.checked })
         })
     }
@@ -1238,6 +1238,15 @@ ApplicationWindow {
                                               { text: backend.pauseSample(win.readLangs[0]), pauseMs: value })
                         }
                     }
+                    Section {
+                        title: Tr.t("follow.title"); glyph: ic.book
+                        supporting: Tr.t("follow.setting")
+                        SwitchItem {
+                            id: followSwitch
+                            checked: win.init.follow
+                            title: Tr.t("tray.follow")
+                        }
+                    }
                 }
 
                 // ===== Page 3: text clean-up =============================== //
@@ -1409,7 +1418,7 @@ ApplicationWindow {
                 spacing: 8
                 Small {
                     visible: !!win.init.version
-                    text: "Recito " + win.init.version
+                    text: "Recito TTS " + win.init.version
                     opacity: 0.7
                     wrapMode: Text.NoWrap
                 }

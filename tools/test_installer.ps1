@@ -91,8 +91,8 @@ try {
 
     # The shortcut code runs against the throwaway APPDATA (the setup skipped it in test mode).
     & $py -c "import sys; sys.path.insert(0, r'$App'); import win_autostart; win_autostart.set_enabled(True); win_autostart.start_menu_shortcut()"
-    Check (Test-Path (Join-Path $Roam 'Microsoft\Windows\Start Menu\Programs\Startup\Recito.lnk')) 'win_autostart makes the autostart shortcut'
-    Check (Test-Path (Join-Path $Roam 'Microsoft\Windows\Start Menu\Programs\Recito.lnk')) 'win_autostart makes the Start menu shortcut'
+    Check (Test-Path (Join-Path $Roam 'Microsoft\Windows\Start Menu\Programs\Startup\Recito TTS.lnk')) 'win_autostart makes the autostart shortcut'
+    Check (Test-Path (Join-Path $Roam 'Microsoft\Windows\Start Menu\Programs\Recito TTS.lnk')) 'win_autostart makes the Start menu shortcut'
 
     # --- upgrade over the existing install ------------------------------------
     Add-Content (Join-Path $Conf 'voices.conf') "`nmy_test_key=keep-me"

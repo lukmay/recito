@@ -19,6 +19,11 @@ IPC protocol (one message per connection, UTF-8):
   {"cmd": "quit"}        exit (the tray restarts the daemon)
   {"cmd": "status"}      reply {"state": "idle"|"speaking"|"paused"} on the same
                          connection (after the client's write shutdown)
+  {"cmd": "follow", "job": <id>}
+                         like status, plus "job" (id of the current job, null
+                         for previews) and "span" ([start, end] of the word
+                         being heard in the cleaned-up text); "text" only when
+                         the client's job id differs (tts_follow)
   raw text (not JSON)    read with the default voice
 
 Configuration: voices.conf in tts_platform.piper_dir() (see config/voices.conf).
@@ -65,6 +70,7 @@ import tts_langs  # noqa: E402
 import tts_neural  # noqa: E402
 import tts_platform  # noqa: E402
 import tts_previews  # noqa: E402
+import tts_timing  # noqa: E402
 
 PIPER_DIR = tts_platform.piper_dir()
 CONF_PATH = PIPER_DIR / "voices.conf"
@@ -140,6 +146,16 @@ class _Chunk:
         self.audio_int16_bytes = audio
         self.sample_rate = rate
         self.sample_channels = channels
+
+
+class _Mark:
+    """Queue item before the audio of playback unit `unit`, so the player
+    knows where in the sink each unit starts."""
+    __slots__ = ("unit",)
+    audio_int16_bytes = b""
+
+    def __init__(self, unit: int):
+        self.unit = unit
 
 
 def _pcm_chunks(pcm, rate, channels):
@@ -797,11 +813,16 @@ def _engine_safe(text: str) -> str:
     return re.sub(r"[ \t]{2,}", " ", safe).strip()
 
 
+# Ids start at the clock, so they do not repeat after a daemon restart
+_job_ids = iter(range(int(time.time() * 1000), 1 << 62))
+
+
 class Job:
     """One read-aloud job in its own thread, cancellable."""
 
     def __init__(self, text: str, voice_key: str, length_scale,
                  pause_ms=None, test=None):
+        self.id = next(_job_ids)
         self.text = text
         self.voice_key = voice_key          # may be "auto"
         self.length_scale = length_scale
@@ -826,6 +847,9 @@ class Job:
         self.prebuf_bytes = PREBUFFER_BYTES if (chunked and not test) else 0
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.paused = False
+        self.track = None                   # tts_timing.Tracker, not for previews
+        self.cancelled = False
+        self._unit_audio = None             # UnitAudio of the unit being produced
 
     def toggle_pause(self):
         """Pause or resume in place. While paused, the full queue also blocks
@@ -974,12 +998,17 @@ class Job:
         last_key, lr, lc = DEFAULT_KEY, None, None
         try:
             units = self._units()
+            if not self.test:
+                self.track = tts_timing.Tracker(self.text, units, self.pace)
             for i, unit in enumerate(units):
                 if self.stop.is_set():
                     break
                 self._ctx = (units[i - 1] if i else None,
                              units[i + 1] if i + 1 < len(units) else None)
                 last_key = self._pick_key(unit, last_key)
+                if self.track is not None:
+                    self._put(q, _Mark(i))
+                    self._unit_audio = self.track.unit_audio(i)
                 for chunk in self._synth(unit, last_key):
                     if self.stop.is_set():
                         return
@@ -989,6 +1018,9 @@ class Job:
                 for part in self._process(None):
                     lr, lc = part.sample_rate, part.sample_channels
                     self._emit(q, part)
+                if self.track is not None:
+                    self._unit_audio = None
+                    self.track.unit_done(i)
                 pause = self.pause_ms if self.pause_ms is not None else PAUSE_SENTENCE_MS
                 # Pause only at a real sentence end, not between parts of one sentence.
                 if (pause and lr and not self.stop.is_set()
@@ -1024,6 +1056,9 @@ class Job:
     def _emit(self, q, chunk):
         if self._rec is not None:
             self._record(chunk)
+        if self._unit_audio is not None:
+            self._unit_audio.add(chunk.audio_int16_bytes, chunk.sample_rate,
+                                 chunk.sample_channels)
         self._put(q, chunk)
 
     def _record(self, chunk):
@@ -1051,22 +1086,30 @@ class Job:
         prod = threading.Thread(target=self._produce, args=(q,), daemon=True)
         prod.start()
 
-        state = {"rate": None, "logged": False}
+        state = {"rate": None, "logged": False, "written": 0, "mark": None}
 
         def play(chunk):
             """Write a chunk to the sink; reopen it when the sample rate
             changes (engine or language switch). False = stop."""
+            if isinstance(chunk, _Mark):      # the next audio starts this unit
+                state["mark"] = chunk.unit
+                return True
             sink = self.sink
             if sink is not None and chunk.sample_rate != state["rate"]:
                 sink.close()
                 sink = self.sink = None
             if sink is None:
                 state["rate"] = chunk.sample_rate
+                state["written"] = 0
                 sink = tts_platform.make_audio_sink(chunk.sample_rate, chunk.sample_channels)
                 self.sink = sink
                 if self.stop.is_set():        # cancelled while opening
                     sink.kill()
                     return False
+            if state["mark"] is not None and self.track is not None:
+                self.track.mark(state["mark"], sink, state["written"])
+                state["mark"] = None
+            state["written"] += len(chunk.audio_int16_bytes)
             ok = sink.write(chunk.audio_int16_bytes)
             if ok and not state["logged"]:
                 state["logged"] = True
@@ -1105,10 +1148,20 @@ class Job:
                 self.sink.close()
             prod.join(timeout=1)
 
+    def word(self):
+        """[start, end] of the word being heard in self.text, or None."""
+        sink, track = self.sink, self.track
+        position = getattr(sink, "position", None)
+        if track is None or position is None:
+            return None
+        span = track.current(sink, position())
+        return list(span) if span else None
+
     def start(self):
         self.thread.start()
 
     def cancel(self):
+        self.cancelled = True
         self.stop.set()
         if self.sink is not None:
             self.sink.kill()
@@ -1201,19 +1254,49 @@ def status() -> dict:
     """Playback state for the tray icon."""
     with _lock:
         job = _current
-    if job is None or job.stop.is_set() or not job.thread.is_alive():
+    # Speaking until the sink has played its buffer (the thread ends after
+    # that), not only until the last chunk was written.
+    if job is None or job.cancelled or not job.thread.is_alive():
         return {"state": "idle"}
     return {"state": "paused" if job.paused else "speaking"}
 
 
-def _is_status(text: str) -> bool:
-    t = text.strip()
-    if not t.startswith("{") or '"status"' not in t:
-        return False
+def follow(known_job=None) -> dict:
+    """Playback state plus the word being heard, for the follow window. The
+    text goes along only when the window does not have it yet."""
+    with _lock:
+        job = _current
+    reply = status()
+    if job is None or job.test:
+        reply["job"] = None
+        return reply
+    reply["job"] = job.id
+    if job.id != known_job:
+        reply["text"] = job.text
     try:
-        return json.loads(t).get("cmd") == "status"
-    except (ValueError, AttributeError):
-        return False
+        reply["span"] = job.word() if not job.cancelled else None
+    except Exception as exc:          # never break the status reply
+        log(f"follow error: {exc!r}")
+        reply["span"] = None
+    return reply
+
+
+def _query(text: str):
+    """The request of a status or follow message (answered on the same
+    connection), else None."""
+    t = text.strip()
+    if not t.startswith("{") or ('"status"' not in t and '"follow"' not in t):
+        return None
+    try:
+        obj = json.loads(t)
+    except ValueError:
+        return None
+    return obj if isinstance(obj, dict) and obj.get("cmd") in ("status", "follow") else None
+
+
+def _is_status(text: str) -> bool:
+    q = _query(text)
+    return q is not None and q["cmd"] == "status"
 
 
 # A client that never closes its write side (a browser keeps an HTTP
@@ -1280,9 +1363,11 @@ def main():
         conn, _ = server.accept()
         with conn:
             text = _receive(conn)
-            if _is_status(text):
+            q = _query(text)
+            if q is not None:
+                reply = status() if q["cmd"] == "status" else follow(q.get("job"))
                 try:
-                    conn.sendall(json.dumps(status()).encode("utf-8"))
+                    conn.sendall(json.dumps(reply, ensure_ascii=False).encode("utf-8"))
                 except OSError:
                     pass
                 continue

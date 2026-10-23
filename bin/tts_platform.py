@@ -685,6 +685,7 @@ def capture_ocr_text(lang=None) -> str:
 #   sink.pause_toggle()             (pause/resume)
 #   sink.close()                    (drain, then stop)
 #   sink.kill()                     (stop at once)
+#   sink.position() -> int          (bytes heard so far, for the follow window)
 
 class _AplaySink:
     """Linux: ALSA `aplay` as a subprocess; pause via SIGSTOP/SIGCONT."""
@@ -695,14 +696,34 @@ class _AplaySink:
              "-r", str(rate), "-c", str(channels)],
             stdin=subprocess.PIPE)
         self._paused = False
+        # aplay reports no position, so position() is a clock that runs at the
+        # byte rate while written audio is left and stands still when paused.
+        self._rate = rate * channels * 2
+        self._written = 0
+        self._pos = 0.0
+        self._t = None
+
+    def _tick(self):
+        now = time.monotonic()
+        if self._t is not None and not self._paused:
+            self._pos = min(self._written, self._pos + (now - self._t) * self._rate)
+        self._t = now
 
     def write(self, pcm):
         try:
             self._p.stdin.write(pcm)
             self._p.stdin.flush()
-            return True
         except (BrokenPipeError, ValueError, OSError):
             return False
+        self._tick()
+        self._written += len(pcm)
+        return True
+
+    def position(self):
+        if self._t is None:
+            return 0
+        self._tick()
+        return int(self._pos)
 
     def pause_toggle(self):
         import signal
@@ -710,6 +731,7 @@ class _AplaySink:
             return
         try:
             self._p.send_signal(signal.SIGCONT if self._paused else signal.SIGSTOP)
+            self._tick()
             self._paused = not self._paused
         except Exception:
             pass
@@ -763,10 +785,13 @@ class _SoundDeviceSink:
         self._dead = False
         self._done = False                       # close() called: drain
         self._max_buf = rate * channels * 2 * 2  # ~2 s backpressure (s16)
+        self._played = 0                         # bytes handed to the device
         self._stream = sd.RawOutputStream(
             samplerate=rate, channels=channels, dtype="int16",
             blocksize=0, callback=self._callback)
         self._stream.start()
+        # What the callback hands over is heard one output latency later
+        self._latency = int((getattr(self._stream, "latency", 0) or 0) * rate * channels * 2)
 
     def _callback(self, outdata, frames, time_info, status):
         need = len(outdata)
@@ -780,6 +805,7 @@ class _SoundDeviceSink:
             if n:
                 outdata[:n] = self._buf[:n]
                 del self._buf[:n]
+                self._played += n
                 if len(self._buf) < self._max_buf:
                     self._space.set()
         if n < need:
@@ -797,6 +823,9 @@ class _SoundDeviceSink:
                 self._space.clear()
             self._space.wait(0.1)
         return False
+
+    def position(self):
+        return max(0, self._played - self._latency)
 
     def pause_toggle(self):
         self._paused = not self._paused

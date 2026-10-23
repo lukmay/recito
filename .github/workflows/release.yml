@@ -196,7 +196,7 @@ jobs:
           case "$VERSION" in *-*) prerelease+=(--prerelease) ;; esac
           gh release create "$TAG" dist/* \
             --target "$GITHUB_SHA" \
-            --title "Recito $VERSION" \
+            --title "Recito TTS $VERSION" \
             --notes-file release-notes.md \
             --generate-notes \
             "${prerelease[@]}"

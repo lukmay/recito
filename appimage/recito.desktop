@@ -1,6 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Recito
+Name=Recito TTS
+GenericName=Text to speech
+Keywords=TTS;text to speech;read aloud;speech;voice;screen reader;Vorlesen;
 Comment=Read the selected text aloud with local or online voices
 Exec=AppRun
 Icon=recito

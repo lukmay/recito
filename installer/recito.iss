@@ -23,9 +23,9 @@
 
 [Setup]
 AppId={{7BDC5E63-641F-496B-BD76-A13E5B3A913E}
-AppName=Recito
+AppName=Recito TTS
 AppVersion={#AppVersion}
-AppVerName=Recito {#AppVersion}
+AppVerName=Recito TTS {#AppVersion}
 AppPublisher=lukmay
 AppPublisherURL=https://github.com/lukmay/recito
 AppSupportURL=https://github.com/lukmay/recito/issues
@@ -43,7 +43,7 @@ OutputDir=..\dist
 OutputBaseFilename=Recito-Setup-{#AppVersion}
 SetupIconFile=..\assets\icons\app.ico
 UninstallDisplayIcon={app}\icons\app.ico
-UninstallDisplayName=Recito
+UninstallDisplayName=Recito TTS
 LicenseFile=..\LICENSE
 WizardStyle=modern
 WizardImageFile=wizard.bmp
@@ -350,6 +350,8 @@ begin
   if not TestMode then
   begin
     Programs := ExpandConstant('{userprograms}');
+    DeleteFile(Programs + '\Recito TTS.lnk');
+    DeleteFile(Programs + '\Startup\Recito TTS.lnk');
     DeleteFile(Programs + '\Recito.lnk');
     DeleteFile(Programs + '\Startup\Recito.lnk');
   end;

@@ -524,6 +524,7 @@ class Backend(QObject):
             "speedNormal": float(conf.get("speed_normal", 1.0) or 1.0),
             "speedFast": float(conf.get("speed_fast", 0.8) or 0.8),
             "pause": int(conf.get("pause_sentence", 0) or 0),
+            "follow": conf.get("follow_window", "on").lower() not in ("off", "0", "no", "false", "aus"),
             "inprocHotkeys": tts_platform.INPROC_HOTKEYS,
             "linux": tts_platform.IS_LINUX,
             "version": tts_platform.app_version(),
@@ -742,6 +743,8 @@ class Backend(QObject):
             "elevenlabs_model": s["el"]["model"],
             "elevenlabs_cache": "on" if s["el"]["cache"] else "off",
         }
+        if "follow" in s:
+            updates["follow_window"] = "on" if s["follow"] else "off"
         langs = [x for x in (s.get("readLangs") or []) if x in LANGS]
         if langs:
             updates["read_langs"] = tts_langs.format_read_langs(langs)

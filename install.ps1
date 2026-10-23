@@ -192,7 +192,8 @@ function Install-Recito {
                         'tts_filters.py', 'tts_rules.py', 'tts_platform.py', 'tts_theme.py', 'tts_config.py',
                         'tts_elevenlabs.py', 'tts_settings.py', 'tts_settings.qml', 'tts_reader.py',
                         'win_autostart.py', 'tts_neural.py', 'tts_voices.py', 'tts_i18n.py', 'tts_langs.py',
-                        'win_hotkeys.py', 'win_ocr.py', 'win_sapi.py', 'tts_previews.py', 'tts_icons.py', 'tts_audio.py') {
+                        'win_hotkeys.py', 'win_ocr.py', 'win_sapi.py', 'tts_previews.py', 'tts_icons.py', 'tts_audio.py',
+                        'tts_timing.py', 'tts_follow.py') {
             Copy-Item (Join-Path $Repo "bin\$f") (Join-Path $BinDir $f) -Force
         }
         # Version shown in the settings window and the tray tooltip
@@ -315,9 +316,9 @@ function Install-Recito {
     # --- 6/7  Autostart and Start menu -------------------------------------- #
     Step '6/7' 'Autostart and Start menu shortcut'
     if (-not $NoShortcuts) {
-        # Autostart and Start menu shortcut ('Recito', searchable) through the
+        # Autostart and Start menu shortcut ('Recito TTS', searchable) through the
         # app logic (single source of truth): app icon and the tray's AppUserModelID.
-        # Both calls first delete the shortcuts of the old name (TTS-Vorlesen.lnk in the
+        # Both calls first delete the shortcuts of the old name (TTS-Vorlesen.lnk and Recito.lnk in the
         # Startup folder and the Start menu), so the tray does not start twice.
         Invoke-Logged $Py @('-c',
             "import sys; sys.path.insert(0, r'$BinDir'); import win_autostart; win_autostart.set_enabled(True); win_autostart.start_menu_shortcut()") | Out-Null
@@ -360,5 +361,5 @@ Say '   Ctrl+Alt+O / Shift+O   Read OCR region / fast'
 Say '   Ctrl+Alt+L             Pause / resume'
 Say '   Ctrl+Alt+S             Stop'
 Say ' Engine, voices, speed: tray settings.'
-Say ' Manual start: Start menu -> "Recito".'
+Say ' Manual start: Start menu -> "Recito TTS".'
 Say '============================================================' 'Green'

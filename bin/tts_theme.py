@@ -28,6 +28,75 @@ DARK = {
     "inverse_surface": "#E6E0E9", "inverse_on_surface": "#322F35",
 }
 
+# --- Follow window: Adobe Spectrum 2 look ------------------------------------
+# Values from @adobe/spectrum-tokens 13.16 (color-palette, color-aliases,
+# layout). The follow window floats above other apps like a Spectrum popover:
+# elevated background, no border in light, the elevated drop shadow, quiet
+# round action buttons and the Spectrum gray scale for text. Colors with
+# alpha are written #AARRGGBB, the order QColor reads.
+S2_LIGHT = {
+    "elevated": "#FFFFFF",              # background-elevated-color
+    "border": "#00000000",              # popover-border-color (none)
+    "content": "#292929",               # neutral-content-color (gray-800)
+    "content_read": "#717171",          # gray-600, 4.9:1 on elevated
+    "title": "#505050",                 # neutral-subdued-content-color (gray-700)
+    "on_mark": "#131313",               # gray-900
+    "hover": "#E9E9E9",                 # gray-100
+    "pressed": "#E1E1E1",               # gray-200
+    "ring": "#131313",                  # gray-900, selected swatch
+    "swatch_border": "#1F000000",       # 12 % black around a swatch
+    "shadow": "#1F000000",              # drop-shadow-elevated-key-color
+    "shadow_ambient": "#29000000",      # drop-shadow-elevated-color
+}
+S2_DARK = {
+    "elevated": "#222222",
+    "border": "#393939",                # gray-300: dark windows need an edge on dark apps
+    "content": "#DBDBDB",
+    "content_read": "#8A8A8A",          # gray-600, 5.2:1 on elevated
+    "title": "#AFAFAF",
+    "on_mark": "#F2F2F2",
+    "hover": "#323232",                 # gray-200 (dark scale)
+    "pressed": "#393939",               # gray-300
+    "ring": "#F2F2F2",
+    "swatch_border": "#29FFFFFF",
+    "shadow": "#5C000000",              # drop-shadow-color (dark), 36 %
+    "shadow_ambient": "#5C000000",
+}
+# Mark colors for the word being heard: the Spectrum palette at step 400
+# (light) and 600 (dark), so the mark stands out from the window (1.6:1 and
+# 2.4:1) and the text on it keeps 11.5:1 and 5.9:1 contrast.
+MARKS = {
+    "blue": ("#ACCFFD", "#2549E5"),
+    "purple": ("#DDC1F6", "#8222D7"),
+    "magenta": ("#FFB9D0", "#B5134C"),
+    "orange": ("#FFC15E", "#A23B00"),
+    "yellow": ("#F5C700", "#825200"),
+    "green": ("#81E43A", "#32690B"),
+    "cyan": ("#8AD5FF", "#03638C"),
+}
+DEFAULT_MARK = "blue"                   # Spectrum's accent color
+
+# Spacing (4 px grid), corner radii (corner-radius-*) and sizes.
+SPACE = {"xs": 4, "s": 8, "m": 12, "l": 16, "xl": 24, "xxl": 48}
+RADIUS = {"mark": 4, "swatch": 8, "window": 16}   # small, medium, extra-large
+SIZE = {"control": 32, "icon": 20, "swatch": 24, "shadow": 24}
+TYPE = {"title": 14, "reading": 18}
+READING_LINE_HEIGHT = 150           # percent of the font height
+ICON_STROKE = 1.5
+
+
+def font_family() -> str:
+    return "Segoe UI" if sys.platform == "win32" else "Noto Sans"
+
+
+def s2_colors() -> dict:
+    return S2_DARK if is_dark() else S2_LIGHT
+
+
+def mark_color(name: str) -> str:
+    light, dark = MARKS.get(name, MARKS[DEFAULT_MARK])
+    return dark if is_dark() else light
+
 
 def _linux_desktop_dark():
     """Ask the desktop directly whether it is dark. The pip Qt has no KDE

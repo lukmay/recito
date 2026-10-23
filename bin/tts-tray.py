@@ -26,6 +26,7 @@ import tts_icons
 import tts_platform   # OS layer: paths, IPC, hotkeys, autostart, OCR, service
 import tts_theme
 import tts_elevenlabs as eleven
+import tts_follow
 import tts_i18n
 import tts_langs
 import tts_settings
@@ -166,6 +167,9 @@ class Tray:
         self.watcher.changed.connect(self._on_status)
         self.watcher.start()
         app.aboutToQuit.connect(self.watcher.stop)
+        # Follow window: shows the text being read and marks the word you hear.
+        self.follow = tts_follow.Follow(send)
+        app.aboutToQuit.connect(self.follow.stop)
         QGuiApplication.styleHints().colorSchemeChanged.connect(self._on_scheme)
 
         # Where the tray manages the daemon (Windows), start it here and
@@ -234,6 +238,7 @@ class Tray:
     def _send(self, obj):
         ok = send(obj)
         self.watcher.poke()          # show speaking/paused without waiting a poll
+        self.follow.poke()
         return ok
 
     def _on_channel(self):
@@ -429,6 +434,13 @@ class Tray:
         a_gpu.setChecked(conf.get("device", "cpu") == "gpu")
         a_gpu.triggered.connect(lambda on: self._set_device(on))
         m.addAction(a_gpu)
+
+        a_follow = QAction(tr("tray.follow"), m, checkable=True)
+        a_follow.setChecked(tts_follow.enabled())
+        a_follow.triggered.connect(lambda on: self._set_follow(on))
+        m.addAction(a_follow)
+        # The settings window can switch it too
+        m.aboutToShow.connect(lambda: a_follow.setChecked(tts_follow.enabled()))
         m.addSeparator()
 
         a_test = QAction(tr("tray.sample"), m)
@@ -543,6 +555,10 @@ class Tray:
     def _set_device(self, gpu):
         write_conf({"device": "gpu" if gpu else "cpu"})
         restart_daemon()
+        self.tray.setContextMenu(self._menu())
+
+    def _set_follow(self, on):
+        self.follow.set_enabled(on)
         self.tray.setContextMenu(self._menu())
 
     def _set_filter(self, name, on):

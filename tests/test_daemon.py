@@ -280,3 +280,32 @@ def test_status_reports_playback_state(daemon, monkeypatch):
     gate.set()
     d._current.thread.join(5)
     assert d.status() == {"state": "idle"}
+
+
+def test_follow_reports_job_text_and_word(daemon, monkeypatch):
+    d = daemon("engine=piper\n")
+    assert d.follow() == {"state": "idle", "job": None}
+    assert d._query('{"cmd": "follow", "job": 3}') == {"cmd": "follow", "job": 3}
+    assert d._query('{"text": "follow"}') is None
+    gate = threading.Event()
+
+    class _Positioned(_Sink):
+        def write(self, pcm):
+            gate.wait(5)
+            return True
+
+        def position(self):
+            return 0
+
+    monkeypatch.setattr(tts_platform, "make_audio_sink", lambda rate, ch: _Positioned([]))
+    d.handle('{"text": "Eins zwei. Drei vier.", "voice": "de"}')
+    for _ in range(100):                    # wait until the first unit is playing
+        job = d._current
+        if job.sink is not None and job.track is not None and job.track.marks:
+            break
+        time.sleep(0.02)
+    r = d.follow()
+    assert r["state"] == "speaking" and r["job"] == job.id
+    assert r["text"] == job.text and r["span"] == [0, 4]
+    assert "text" not in d.follow(job.id)   # the text goes along once per job
+    gate.set()
