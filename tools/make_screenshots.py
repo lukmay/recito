@@ -13,7 +13,9 @@ installed setup is read or written. One child process per theme, because the
 theme is read once at start.
 
 Compose stage: puts each grab on a 1600x1000 canvas with a brand gradient,
-rounded corners and a soft shadow, and writes WebP files.
+rounded corners and a soft shadow, and writes WebP files. The follow window
+is shown floating over a drawn article page with a selected paragraph, the
+way it appears while Recito reads.
 """
 import os
 import shutil
@@ -195,9 +197,46 @@ def shoot(theme: str) -> None:
     scroll_item_into_view("rulesSection", -100)
     shot("rules", size=(1000, 940))
 
+    # --- follow window, floating over the article of the compose stage ------- #
+    shoot_follow(theme, out, pump)
+
     print("done", flush=True)
     sys.stdout.flush()
     os._exit(0)
+
+
+FOLLOW_TEXT = ("The follow-along window shows the text you selected and marks each word "
+               "as it is spoken, so your eyes always know where the voice is. It never takes "
+               "the focus, so you can keep scrolling, writing or taking notes.")
+FOLLOW_WORD = "spoken"
+FOLLOW_SIZE = (760, 196)    # panel in logical px, without the shadow margin
+
+
+def shoot_follow(theme, out, pump):
+    """The real follow window, fed like the daemon would feed it."""
+    import tts_follow
+    import tts_platform
+    import tts_theme
+    tts_theme.is_dark = lambda: theme == "dark"
+    tts_platform.conf_write({"follow_color": "blue", "follow_opacity": "100",
+                             "follow_text_size": "18"})
+    w = tts_follow.FollowWindow(lambda obj: None)
+    m = 2 * tts_theme.SIZE["shadow"]
+    start = FOLLOW_TEXT.index(FOLLOW_WORD)
+    w.on_update({"state": "speaking", "job": 1, "text": FOLLOW_TEXT,
+                 "span": [start, start + len(FOLLOW_WORD)]})
+    w.resize(FOLLOW_SIZE[0] + m, FOLLOW_SIZE[1] + m)
+    pump(0.6)
+    w.grab().save(str(out / "follow.png"))
+    print("shot", theme, "follow", flush=True)
+
+    w._pick("yellow")
+    w.btn_color.setChecked(True)
+    w.slider.setValue(75)
+    w.resize(FOLLOW_SIZE[0] + m, FOLLOW_SIZE[1] + 120 + m)
+    pump(0.6)
+    w.grab().save(str(out / "follow_look.png"))
+    print("shot", theme, "follow_look", flush=True)
 
 
 # --------------------------------------------------------------------------- #
@@ -216,6 +255,16 @@ MOTIFS = [
     ("languages", "langs_section", (292, 12, 672, 224), (1180, 420)),
 ]
 TRAY_STATES = [("", "Idle"), ("-speaking", "Speaking"), ("-paused", "Paused"), ("-error", "Error")]
+# name, raw grab of the follow window
+FOLLOW_MOTIFS = [("follow", "follow"), ("follow-look", "follow_look")]
+ARTICLE = [
+    ("h", "Reading along"),
+    ("p", "Long articles, papers and notes are easier to finish when you can listen to "
+          "them. Select a paragraph in any app, press the hotkey, and Recito reads it aloud."),
+    ("sel", FOLLOW_TEXT),
+    ("p", "Pause at any time and the window steps aside. Resume, and it comes back at the "
+          "word where you stopped."),
+]
 
 
 def compose() -> None:
@@ -302,7 +351,70 @@ def compose() -> None:
             p.drawText(QRectF(cx - 100, rect.top() + 146, 200, 34), Qt.AlignCenter, label)
             p.setPen(Qt.NoPen)
 
+    def article(p, theme):
+        """A browser-like page with a selected paragraph, the app being read."""
+        from PySide6.QtGui import QTextDocument
+        light = theme == "light"
+        rect = QRectF(110, 70, 1140, 860)
+        shadow(p, rect, theme)
+        path = QPainterPath()
+        path.addRoundedRect(rect, RADIUS, RADIUS)
+        p.save()
+        p.setClipPath(path)
+        p.fillRect(rect, QColor("#FFFFFF" if light else "#1E1E1E"))
+        bar = QRectF(rect.left(), rect.top(), rect.width(), 56)
+        p.fillRect(bar, QColor("#F1F1F3" if light else "#2B2B2B"))
+        p.setPen(Qt.NoPen)
+        for i, c in enumerate(("#FF5F57", "#FEBC2E", "#28C840")):
+            p.setBrush(QColor(c))
+            p.drawEllipse(QRectF(rect.left() + 24 + i * 22, rect.top() + 22, 12, 12))
+        p.setBrush(QColor("#FFFFFF" if light else "#3A3A3A"))
+        pill = QRectF(rect.left() + 120, rect.top() + 13, 560, 30)
+        p.drawRoundedRect(pill, 15, 15)
+        font = QFont("Segoe UI" if sys.platform == "win32" else "Noto Sans")
+        font.setPixelSize(15)
+        p.setFont(font)
+        p.setPen(QColor("#6B6B6B" if light else "#A0A0A0"))
+        p.drawText(pill.adjusted(16, 0, 0, 0), Qt.AlignVCenter, "notes.example.org/reading-along")
+        text_c = "#2B2B2B" if light else "#D6D6D6"
+        sel_c = "#CCE2FF" if light else "#264F78"
+        html = []
+        for kind, txt in ARTICLE:
+            if kind == "h":
+                html.append(f"<h1 style='font-size:34px; margin-bottom:18px; color:{text_c}'>{txt}</h1>")
+            elif kind == "sel":
+                html.append(f"<p style='margin-bottom:18px'>"
+                            f"<span style='background:{sel_c}'>{txt}</span></p>")
+            else:
+                html.append(f"<p style='margin-bottom:18px'>{txt}</p>")
+        doc = QTextDocument()
+        body = QFont(font)
+        body.setPixelSize(21)
+        doc.setDefaultFont(body)
+        doc.setDefaultStyleSheet(f"p {{ color: {text_c}; line-height: 150%; }}")
+        doc.setHtml("".join(html))
+        doc.setTextWidth(rect.width() - 160)
+        p.translate(rect.left() + 80, rect.top() + 90)
+        doc.drawContents(p)
+        p.restore()
+        p.setBrush(Qt.NoBrush)
+        p.setPen(QColor(255, 255, 255, 38 if theme == "dark" else 70))
+        p.drawRoundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5), RADIUS, RADIUS)
+
+    def follow(p, theme, src):
+        shot = QImage(str(RAW / theme / f"{src}.png"))
+        w, h = shot.width() / CAP, shot.height() / CAP
+        k = 1.15                                  # a little larger than life, it is the subject
+        rect = QRectF(CANVAS[0] - w * k - 40, CANVAS[1] - h * k - 30, w * k, h * k)
+        p.drawImage(rect, shot)
+
     for theme in THEMES:
+        for name, src in FOLLOW_MOTIFS:
+            img, p = canvas(theme)
+            article(p, theme)
+            follow(p, theme, src)
+            p.end()
+            save(img, OUT / f"{name}-{theme}.webp")
         for name, src, crop, box in MOTIFS:
             img, p = canvas(theme)
             window(p, theme, src, crop, box)

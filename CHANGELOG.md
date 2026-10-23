@@ -4,14 +4,29 @@ Each release has a section here. The section of the version in `VERSION` becomes
 
 ## 1.2.1
 
-Fixes for the follow-along window.
+The follow-along window gets an adjustable text size and two fixes.
 
-- The colored mark behind the word being heard sat a few letters too far right, one letter more after every line. Text copied on Windows ends each line with a carriage return and a line feed. The daemon counted both as characters while the window counted one line break, so the positions drifted apart. The window now converts every position, and it also counts an emoji the way the daemon does.
-- Below 100 percent background opacity, a gray box covered the text. It is gone, and the letters now get a thin outline in the window's background color, which keeps them readable over whatever shows through.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/lukmay/recito/v1.2.1/docs/images/follow-look-dark.webp">
+    <img src="https://raw.githubusercontent.com/lukmay/recito/v1.2.1/docs/images/follow-look-light.webp" alt="The look panel of the follow-along window with mark colors, background opacity and text size" width="720">
+  </picture>
+</p>
+
+- The text size of the follow-along window can be set from 14 to 32 pixels. A slider for it sits in the panel that the look button opens, and another on the speed page of the settings window.
+- The colored mark behind the word being spoken sat a few letters too far right, one letter more after every line. Text copied on Windows ends each line with a carriage return and a line feed. Recito counted both as characters while the window counted one line break, so the positions drifted apart. Every position is now converted to the window's count, which also handles emoji correctly.
+- Below 100 percent background opacity, the glow meant to keep the text readable showed up as a gray box. Instead of the glow, the letters now get a thin outline in the window's background color, which keeps them readable over whatever shows through.
 
 ## 1.2.0
 
 Recito is now called Recito TTS, so that people who search for a text-to-speech app can find it. While it reads, a new follow-along window shows the text and marks the word you hear.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/lukmay/recito/v1.2.1/docs/images/follow-dark.webp">
+    <img src="https://raw.githubusercontent.com/lukmay/recito/v1.2.1/docs/images/follow-light.webp" alt="The follow-along window floats over an article and marks the word being spoken" width="720">
+  </picture>
+</p>
 
 - The follow-along window floats above other windows without taking the focus and scrolls with the voice. It fades out within a second after the text ends, and it hides while reading is paused. Its look follows Spectrum 2, the design system of Adobe.
 - The look button in the window has seven mark colors and a slider for the background opacity, from 20 to 100 percent. Text and mark stay opaque, and below 100 percent a soft glow keeps the text readable. The settings window has the same slider.

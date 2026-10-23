@@ -54,7 +54,14 @@ Recito TTS is a free, open-source text-to-speech app that reads the text you sel
   </picture>
 </p>
 
-**It shows the word you hear.** While Recito reads, the follow-along window floats above your other windows, shows the text and marks the word being spoken, so your eyes keep up with the voice. The window never takes the focus, so your cursor and selection stay in your app. Recito estimates each word's time from the audio of its sentence, so on long words the mark can run a little ahead or behind. While reading is paused, the window hides and comes back when you resume. The look button in the window sets the mark color and the background opacity, and a switch in the settings window turns the follow-along window off.
+**It shows the word you hear.** While Recito reads, the follow-along window floats above your other windows, shows the text and marks the word being spoken, so your eyes keep up with the voice. The window never takes the focus, so your cursor and selection stay in your app. Recito estimates each word's time from the audio of its sentence, so on long words the mark can run a little ahead or behind. While reading is paused, the window hides and comes back when you resume. The look button in the window sets the mark color, the background opacity and the text size, and a switch in the settings window turns the follow-along window off.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/follow-dark.webp">
+    <img src="docs/images/follow-light.webp" alt="The follow-along window floats over an article and marks the word being spoken" width="720">
+  </picture>
+</p>
 
 ## Quick start
 
