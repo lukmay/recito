@@ -1216,6 +1216,62 @@ def _is_status(text: str) -> bool:
         return False
 
 
+# A client that never closes its write side (a browser keeps an HTTP
+# connection alive) would block the accept loop forever, and Windows then
+# refuses every further connection. Each message gets this long to arrive.
+_RECV_TIMEOUT = 3.0
+
+_HTTP_REQUEST = re.compile(rb"(POST|GET|OPTIONS|PUT|HEAD) \S+ HTTP/1\.[01]\r\n")
+_HTTP_REPLY = (b"HTTP/1.1 204 No Content\r\n"
+               b"Access-Control-Allow-Origin: *\r\n"
+               b"Access-Control-Allow-Methods: POST, OPTIONS\r\n"
+               b"Access-Control-Allow-Headers: *\r\n"
+               b"Access-Control-Allow-Private-Network: true\r\n"
+               b"Connection: close\r\n\r\n")
+
+
+def _http_body(data: bytearray, conn) -> bytes:
+    """Body of an HTTP request (read up to Content-Length, not EOF)."""
+    while b"\r\n\r\n" not in data:
+        buf = conn.recv(65536)
+        if not buf:
+            break
+        data += buf
+    head, _, body = bytes(data).partition(b"\r\n\r\n")
+    m = re.search(rb"(?im)^content-length:\s*(\d+)", head)
+    length = int(m.group(1)) if m else 0
+    while len(body) < length:
+        buf = conn.recv(65536)
+        if not buf:
+            break
+        body += buf
+    return body[:length]
+
+
+def _receive(conn) -> str:
+    """One message from a client. Raw IPC clients send and shut down their
+    write side; HTTP clients (browser pages) get a 204 reply and their body."""
+    conn.settimeout(_RECV_TIMEOUT)
+    data = bytearray()
+    try:
+        while True:
+            buf = conn.recv(65536)
+            if not buf:
+                break
+            data += buf
+            if _HTTP_REQUEST.match(data):
+                body = _http_body(data, conn)
+                conn.sendall(_HTTP_REPLY)
+                return body.decode("utf-8", errors="replace")
+    except TimeoutError:
+        log(f"client sent no end of message within {_RECV_TIMEOUT:.0f} s, dropped")
+        return ""
+    except OSError as exc:
+        log(f"client connection error: {exc!r}")
+        return ""
+    return bytes(data).decode("utf-8", errors="replace")
+
+
 def main():
     server = tts_platform.ipc_listen()
     log(f"ready on {tts_platform.ipc_address()} (voices: {', '.join(VOICES)})")
@@ -1223,13 +1279,7 @@ def main():
     while True:
         conn, _ = server.accept()
         with conn:
-            data = bytearray()
-            while True:
-                buf = conn.recv(65536)
-                if not buf:
-                    break
-                data += buf
-            text = bytes(data).decode("utf-8", errors="replace")
+            text = _receive(conn)
             if _is_status(text):
                 try:
                     conn.sendall(json.dumps(status()).encode("utf-8"))
