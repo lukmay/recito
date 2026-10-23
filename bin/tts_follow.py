@@ -34,11 +34,10 @@ from tts_i18n import tr
 
 from PySide6.QtCore import (QAbstractAnimation, QEasingCurve, QEvent, QObject, QPointF,
                             QPropertyAnimation, QRect, QRectF, QSize, Qt, QTimer, Signal)
-from PySide6.QtGui import (QColor, QCursor, QFont, QGuiApplication, QImage, QPainter,
-                           QPainterPath, QPen, QPixmap, QTextBlockFormat, QTextCharFormat,
-                           QTextCursor)
+from PySide6.QtGui import (QAbstractTextDocumentLayout, QColor, QCursor, QFont,
+                           QGuiApplication, QImage, QPainter, QPainterPath, QPalette, QPen,
+                           QPixmap, QTextBlockFormat, QTextCharFormat, QTextCursor)
 from PySide6.QtWidgets import (QAbstractButton, QFrame, QGraphicsBlurEffect,
-                               QGraphicsDropShadowEffect,
                                QGraphicsPixmapItem, QGraphicsScene, QHBoxLayout, QLabel,
                                QSizeGrip, QSlider, QTextBrowser, QTextEdit, QVBoxLayout,
                                QWidget)
@@ -73,6 +72,24 @@ def opacity() -> int:
     except ValueError:
         value = o["default"]
     return max(o["min"], min(o["max"], value))
+
+
+def qt_text(text: str):
+    """The text as a QTextDocument holds it, and the document position of
+    every index of `text` (one more than its length). The daemon counts in
+    Python characters; the document turns a \r\n pair into one line break
+    and counts a character outside the BMP (emoji) as two UTF-16 units."""
+    out, pos, q = [], [0] * (len(text) + 1), 0
+    for i, ch in enumerate(text):
+        pos[i] = q
+        if ch == "\r":
+            if text[i + 1:i + 2] == "\n":
+                continue                # the \n that follows is the break
+            ch = "\n"
+        out.append(ch)
+        q += 2 if ord(ch) > 0xFFFF else 1
+    pos[len(text)] = q
+    return "".join(out), pos
 
 
 def query_follow(job, timeout=1.0):
@@ -251,6 +268,7 @@ class _ReadingView(QTextBrowser):
         super().__init__()
         self.mark = None                # (start, end) in the document
         self.mark_color = QColor()
+        self.halo = None                # QColor around the glyphs, or None
 
     def _mark_rects(self):
         start, end = self.mark
@@ -278,15 +296,38 @@ class _ReadingView(QTextBrowser):
                                 x2 - x1 + 2 * pad, h + pad))
         return rects
 
+    def _paint_halo(self, p, clip):
+        """The document in the halo color, shifted around each glyph: a thin
+        edge in the panel color that keeps text readable on whatever shows
+        through a see-through panel."""
+        ctx = QAbstractTextDocumentLayout.PaintContext()
+        pal = QPalette(self.palette())
+        pal.setColor(QPalette.Text, self.halo)
+        ctx.palette = pal
+        layout = self.document().documentLayout()
+        dx = -self.horizontalScrollBar().value()
+        dy = -self.verticalScrollBar().value()
+        ctx.clip = QRectF(clip).translated(-dx, -dy)
+        w = tts_theme.HALO_WIDTH
+        for ox, oy in ((-w, 0), (w, 0), (0, -w), (0, w), (-w, -w), (w, -w), (-w, w), (w, w)):
+            p.save()
+            p.translate(dx + ox, dy + oy)
+            layout.draw(p, ctx)
+            p.restore()
+
     def paintEvent(self, ev):
-        if self.mark is not None and self.mark_color.isValid():
+        has_mark = self.mark is not None and self.mark_color.isValid()
+        if self.halo is not None or has_mark:
             p = QPainter(self.viewport())
             p.setRenderHint(QPainter.Antialiasing)
-            p.setPen(Qt.NoPen)
-            p.setBrush(self.mark_color)
-            r = tts_theme.RADIUS["mark"]
-            for rect in self._mark_rects():
-                p.drawRoundedRect(rect, r, r)
+            if self.halo is not None:
+                self._paint_halo(p, ev.rect())
+            if has_mark:
+                p.setPen(Qt.NoPen)
+                p.setBrush(self.mark_color)
+                r = tts_theme.RADIUS["mark"]
+                for rect in self._mark_rects():
+                    p.drawRoundedRect(rect, r, r)
             p.end()
         super().paintEvent(ev)
 
@@ -339,6 +380,7 @@ class FollowWindow(QWidget):
         self._send = send
         self._job = None
         self._span = None
+        self._qpos = [0]                # document position of each index of the text
         self._state = "idle"
         self._dismissed = False         # hidden with the close button until the next text
         self._user_scroll_until = 0.0
@@ -561,19 +603,12 @@ QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
         self._opacity_timer.start()           # write once the slider rests
 
     def _halo(self):
-        """A see-through panel lets the app behind it show through the text.
-        A soft glow in the panel color around the glyphs keeps the text
-        readable on any background; an opaque panel needs none."""
-        if self._opacity >= tts_theme.OPACITY["max"]:
-            self.view.setGraphicsEffect(None)
-            return
-        effect = self.view.graphicsEffect()
-        if not isinstance(effect, QGraphicsDropShadowEffect):
-            effect = QGraphicsDropShadowEffect(self.view)
-            effect.setOffset(0, 0)
-            effect.setBlurRadius(tts_theme.HALO_BLUR)
-            self.view.setGraphicsEffect(effect)
-        effect.setColor(QColor(self.colors["elevated"]))
+        """A see-through panel lets the app behind it show through the text;
+        an edge in the panel color around the glyphs keeps the text readable.
+        An opaque panel needs none."""
+        see_through = self._opacity < tts_theme.OPACITY["max"]
+        self.view.halo = QColor(self.colors["elevated"]) if see_through else None
+        self.view.viewport().update()
 
     def _save_opacity(self):
         tts_platform.conf_write({"follow_opacity": str(self._opacity)})
@@ -602,9 +637,12 @@ QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
             self.btn_pause.update()
             self._tooltips()
         span = reply.get("span")
-        if span and tuple(span) != self._span:
-            self._span = tuple(span)
-            self._highlight()
+        if span:
+            last = len(self._qpos) - 1
+            span = tuple(self._qpos[max(0, min(v, last))] for v in span)
+            if span != self._span:
+                self._span = span
+                self._highlight()
         if state == "idle":
             if self._shown() and not self._hide_timer.isActive():
                 self._hide_timer.start()
@@ -617,7 +655,8 @@ QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
 
     def _set_text(self, text):
         self._span = None
-        self.view.setPlainText(text)
+        shown, self._qpos = qt_text(text)
+        self.view.setPlainText(shown)
         cur = QTextCursor(self.view.document())
         cur.select(QTextCursor.Document)
         fmt = QTextBlockFormat()
