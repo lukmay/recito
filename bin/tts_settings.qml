@@ -288,7 +288,7 @@ ApplicationWindow {
             speedNormal: speedNormal.value, speedFast: speedFast.value,
             pause: pauseSlider.value, voices: voices, instructs: instructs, hotkeys: keys,
             readLangs: readLangs, follow: followSwitch.checked,
-            followOpacity: followOpacity.value,
+            followOpacity: followOpacity.value, followTextSize: followTextSize.value,
             el: Object.assign({}, elCurrent, { model: elModel, cache: elCacheSwitch.checked })
         })
     }
@@ -1255,6 +1255,14 @@ ApplicationWindow {
                             label: Tr.t("follow.opacity"); from: 20; to: 100; step: 5
                             format: function (v) { return Tr.t("follow.percent", { value: Math.round(v) }) }
                             initial: win.init.followOpacity
+                            probeable: false
+                        }
+                        SliderRow {
+                            id: followTextSize
+                            enabled: followSwitch.checked
+                            label: Tr.t("follow.size"); from: 14; to: 32; step: 1
+                            format: function (v) { return Tr.t("follow.px", { value: Math.round(v) }) }
+                            initial: win.init.followTextSize
                             probeable: false
                         }
                     }

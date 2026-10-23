@@ -80,10 +80,12 @@ DEFAULT_MARK = "blue"                   # Spectrum's accent color
 SPACE = {"xs": 4, "s": 8, "m": 12, "l": 16, "xl": 24, "xxl": 48}
 RADIUS = {"mark": 4, "swatch": 8, "window": 16}   # small, medium, extra-large
 SIZE = {"control": 32, "icon": 20, "swatch": 24, "shadow": 24}
-TYPE = {"title": 14, "reading": 18}
+TYPE = {"title": 14, "label": 13, "reading": 18}
 READING_LINE_HEIGHT = 150           # percent of the font height
 # Background opacity of the follow window in percent; text and mark stay opaque
 OPACITY = {"min": 20, "max": 100, "step": 5, "default": 100}
+# Text size of the follow window in px
+TEXT_SIZE = {"min": 14, "max": 32, "step": 1, "default": TYPE["reading"]}
 HALO_WIDTH = 1                      # px of panel color around the glyphs of a see-through panel
 # Motion: Spectrum's quick durations, shorter on the way out
 FADE_IN_MS = 120

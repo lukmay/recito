@@ -11,7 +11,7 @@ stops the automatic scrolling for a moment. The close button hides it until
 the next text; the settings window and the tray menu turn it off
 (follow_window=off in voices.conf). The look button opens the mark color
 (follow_color) and the background opacity (follow_opacity, in percent; text
-and mark stay opaque).
+and mark stay opaque) and the text size (follow_text_size, in px).
 
 The look follows Adobe Spectrum 2 (tokens in tts_theme): a popover with the
 elevated shadow, quiet round action buttons with line icons, the Spectrum
@@ -64,14 +64,22 @@ def mark_name() -> str:
     return name if name in tts_theme.MARKS else tts_theme.DEFAULT_MARK
 
 
+def _ranged(key: str, r: dict) -> int:
+    try:
+        value = int(tts_platform.conf_read().get(key, r["default"]))
+    except ValueError:
+        value = r["default"]
+    return max(r["min"], min(r["max"], value))
+
+
 def opacity() -> int:
     """Background opacity in percent, within tts_theme.OPACITY."""
-    o = tts_theme.OPACITY
-    try:
-        value = int(tts_platform.conf_read().get("follow_opacity", o["default"]))
-    except ValueError:
-        value = o["default"]
-    return max(o["min"], min(o["max"], value))
+    return _ranged("follow_opacity", tts_theme.OPACITY)
+
+
+def text_size() -> int:
+    """Text size in px, within tts_theme.TEXT_SIZE."""
+    return _ranged("follow_text_size", tts_theme.TEXT_SIZE)
 
 
 def qt_text(text: str):
@@ -389,6 +397,7 @@ class FollowWindow(QWidget):
         self._shadow_pix = None
         self._mark = mark_name()
         self._opacity = opacity()
+        self._size = text_size()
         self.colors = tts_theme.s2_colors()
         self.mark_color = tts_theme.mark_color(self._mark)
         sp, size = tts_theme.SPACE, tts_theme.SIZE
@@ -434,32 +443,17 @@ class FollowWindow(QWidget):
             self.swatches.append(s)
             swatch_row.addWidget(s)
         swatch_row.addStretch(1)
-        o = tts_theme.OPACITY
-        self.opacity_label = QLabel(tr("follow.opacity"))
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(o["min"], o["max"])
-        self.slider.setSingleStep(o["step"])
-        self.slider.setPageStep(o["step"] * 2)
-        self.slider.setValue(self._opacity)
-        self.slider.setFocusPolicy(Qt.NoFocus)
-        self.slider.setCursor(Qt.PointingHandCursor)
-        self.slider.setFixedHeight(size["control"])
-        self.slider.setAccessibleName(tr("follow.opacity"))
-        self.slider.valueChanged.connect(self._set_opacity)
-        self.opacity_value = QLabel()
-        self.opacity_value.setMinimumWidth(size["control"] + sp["s"])
-        self.opacity_value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        slider_row = QHBoxLayout()
-        slider_row.setContentsMargins(0, 0, 0, 0)
-        slider_row.setSpacing(sp["m"])
-        slider_row.addWidget(self.opacity_label)
-        slider_row.addWidget(self.slider, 1)
-        slider_row.addWidget(self.opacity_value)
+        self._labels = []
+        opacity_row, self.slider, self.opacity_value = self._slider_row(
+            tr("follow.opacity"), tts_theme.OPACITY, self._opacity, self._set_opacity)
+        size_row, self.size_slider, self.size_value = self._slider_row(
+            tr("follow.size"), tts_theme.TEXT_SIZE, self._size, self._set_size)
         picker = QVBoxLayout()
         picker.setContentsMargins(0, 0, 0, 0)
         picker.setSpacing(sp["xs"])
         picker.addLayout(swatch_row)
-        picker.addLayout(slider_row)
+        picker.addLayout(opacity_row)
+        picker.addLayout(size_row)
         self.picker = QWidget()
         self.picker.setLayout(picker)
         self.picker.hide()
@@ -471,7 +465,7 @@ class FollowWindow(QWidget):
         self.view.setTextInteractionFlags(Qt.NoTextInteraction)
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         f = QFont(tts_theme.font_family())
-        f.setPixelSize(tts_theme.TYPE["reading"])
+        f.setPixelSize(self._size)
         self.view.setFont(f)
         self.view.viewport().installEventFilter(self)
         self._scroll_anim = QPropertyAnimation(self.view.verticalScrollBar(), b"value", self)
@@ -499,8 +493,8 @@ class FollowWindow(QWidget):
         self._fade.finished.connect(self._fade_done)
         self._save_timer = QTimer(self, singleShot=True, interval=600,
                                   timeout=self._save_geometry)
-        self._opacity_timer = QTimer(self, singleShot=True, interval=400,
-                                     timeout=self._save_opacity)
+        self._look_timer = QTimer(self, singleShot=True, interval=400,
+                                  timeout=self._save_look)
         self._apply_colors()
         try:
             QGuiApplication.styleHints().colorSchemeChanged.connect(self._on_scheme)
@@ -508,6 +502,36 @@ class FollowWindow(QWidget):
             pass
 
     # --- look ------------------------------------------------------------- #
+    def _slider_row(self, label, r, value, slot):
+        """Label, Spectrum-style slider and value, for the look panel."""
+        sp, size = tts_theme.SPACE, tts_theme.SIZE
+        font = QFont(tts_theme.font_family())
+        font.setPixelSize(tts_theme.TYPE["label"])
+        name = QLabel(label)
+        shown = QLabel()
+        for lab in (name, shown):
+            lab.setFont(font)
+        name.setMinimumWidth(size["control"] * 5)
+        shown.setMinimumWidth(size["control"] + sp["s"])
+        shown.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        slider = QSlider(Qt.Horizontal)
+        slider.setRange(r["min"], r["max"])
+        slider.setSingleStep(r["step"])
+        slider.setPageStep(r["step"] * 2)
+        slider.setValue(value)
+        slider.setFocusPolicy(Qt.NoFocus)
+        slider.setCursor(Qt.PointingHandCursor)
+        slider.setFixedHeight(size["control"])
+        slider.setAccessibleName(label)
+        slider.valueChanged.connect(slot)
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(sp["m"])
+        row.addWidget(name)
+        row.addWidget(slider, 1)
+        row.addWidget(shown)
+        return row, slider, shown
+
     def _apply_colors(self):
         c = self.colors
         sp = tts_theme.SPACE
@@ -528,6 +552,7 @@ QSlider::handle:horizontal {{ width: {sp['m']}px; height: {sp['m']}px;
 QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
 """)
         self.opacity_value.setText(tr("follow.percent", value=self._opacity))
+        self.size_value.setText(tr("follow.px", value=self._size))
         self._halo()
         self.mark_color = tts_theme.mark_color(self._mark)
         self.view.mark_color = QColor(self.mark_color)
@@ -600,7 +625,18 @@ QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
         self.opacity_value.setText(tr("follow.percent", value=value))
         self._halo()
         self.update()
-        self._opacity_timer.start()           # write once the slider rests
+        self._look_timer.start()              # write once the slider rests
+
+    def _set_size(self, value):
+        if value == self._size:
+            return
+        self._size = value
+        self.size_value.setText(tr("follow.px", value=value))
+        f = self.view.font()
+        f.setPixelSize(value)
+        self.view.setFont(f)                  # line height is proportional, it scales along
+        self._highlight()
+        self._look_timer.start()
 
     def _halo(self):
         """A see-through panel lets the app behind it show through the text;
@@ -610,8 +646,9 @@ QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
         self.view.halo = QColor(self.colors["elevated"]) if see_through else None
         self.view.viewport().update()
 
-    def _save_opacity(self):
-        tts_platform.conf_write({"follow_opacity": str(self._opacity)})
+    def _save_look(self):
+        tts_platform.conf_write({"follow_opacity": str(self._opacity),
+                                 "follow_text_size": str(self._size)})
 
     def _pick(self, name):
         self._mark = name
@@ -720,12 +757,14 @@ QSlider::handle:horizontal:hover {{ border-color: {c['on_mark']}; }}
     # --- showing and hiding ----------------------------------------------- #
     def _sync_look(self):
         """Mark color and opacity as stored, also after the settings window."""
-        name, value = mark_name(), opacity()
+        name, value, px = mark_name(), opacity(), text_size()
         if value != self._opacity:
             self.slider.blockSignals(True)
             self.slider.setValue(value)
             self.slider.blockSignals(False)
             self._opacity = value
+        if px != self._size:
+            self.size_slider.setValue(px)     # applies the font as well
         if name != self._mark:
             self._mark = name
             for s in self.swatches:

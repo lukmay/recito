@@ -360,6 +360,8 @@
   "follow.look": "Adjust color and opacity",
   "follow.opacity": "Background opacity",
   "follow.percent": "{value}%",
+  "follow.size": "Text size",
+  "follow.px": "{value} px",
   "follow.color.blue": "Blue",
   "follow.color.purple": "Purple",
   "follow.color.magenta": "Magenta",

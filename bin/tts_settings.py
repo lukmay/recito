@@ -526,6 +526,7 @@ class Backend(QObject):
             "pause": int(conf.get("pause_sentence", 0) or 0),
             "follow": conf.get("follow_window", "on").lower() not in ("off", "0", "no", "false", "aus"),
             "followOpacity": int(conf.get("follow_opacity", 100) or 100),
+            "followTextSize": int(conf.get("follow_text_size", 18) or 18),
             "inprocHotkeys": tts_platform.INPROC_HOTKEYS,
             "linux": tts_platform.IS_LINUX,
             "version": tts_platform.app_version(),
@@ -748,6 +749,8 @@ class Backend(QObject):
             updates["follow_window"] = "on" if s["follow"] else "off"
         if "followOpacity" in s:
             updates["follow_opacity"] = str(int(round(float(s["followOpacity"]))))
+        if "followTextSize" in s:
+            updates["follow_text_size"] = str(int(round(float(s["followTextSize"]))))
         langs = [x for x in (s.get("readLangs") or []) if x in LANGS]
         if langs:
             updates["read_langs"] = tts_langs.format_read_langs(langs)
