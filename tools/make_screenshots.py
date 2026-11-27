@@ -59,7 +59,7 @@ def shoot(theme: str) -> None:
         os.environ["QT_QPA_FONTDIR"] = "C:/Windows/Fonts"
     sys.path.insert(0, str(REPO / "bin"))
 
-    from PySide6.QtCore import QObject, QMetaObject, Q_ARG, qInstallMessageHandler
+    from PySide6.QtCore import QObject, QMetaObject, QPointF, Q_ARG, qInstallMessageHandler
     from PySide6.QtWidgets import QApplication
 
     qInstallMessageHandler(lambda *a: None)
@@ -197,6 +197,21 @@ def shoot(theme: str) -> None:
     scroll_item_into_view("rulesSection", -100)
     shot("rules", size=(1000, 940))
 
+    # --- shortcuts page: a held combination and a conflict --------------------- #
+    nav.setProperty("currentIndex", 3)
+    pump(0.5)
+    fields = [it for it in all_items()
+              if it.property("rejected") is not None and it.property("pending") is not None
+              and it.isVisible()]
+    fields.sort(key=lambda it: it.mapToScene(QPointF(0, 0)).y())
+    rows = [f.parentItem().parentItem() for f in fields]
+    if len(rows) >= 6:
+        rows[5].setProperty("combo", rows[0].property("combo"))      # Stop = Read: duplicate
+        win.setProperty("hotkeyTick", (win.property("hotkeyTick") or 0) + 1)
+        fields[4].forceActiveFocus()                                 # Pause: recording
+        fields[4].setProperty("pending", "Ctrl+Alt")
+    shot("shortcuts", size=(1000, 800))
+
     # --- follow window, floating over the article of the compose stage ------- #
     shoot_follow(theme, out, pump)
 
@@ -252,6 +267,7 @@ MOTIFS = [
     ("voice", "voice", None, BOX),
     ("new-voice", "newvoice", (200, 140, 600, 420), BOX),
     ("rules", "rules", None, BOX),
+    ("shortcuts", "shortcuts", None, BOX),
     ("languages", "langs_section", (292, 12, 672, 224), (1180, 420)),
 ]
 TRAY_STATES = [("", "Idle"), ("-speaking", "Speaking"), ("-paused", "Paused"), ("-error", "Error")]
