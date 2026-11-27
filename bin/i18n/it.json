@@ -186,6 +186,7 @@
   "hotkeys.title": "Scorciatoie da tastiera",
   "hotkeys.unset": "Non impostata",
   "hotkeys.press": "Premi una combinazione…",
+  "hotkeys.reject": "Solo lettere, cifre o tasti F",
   "hotkey.read": "Leggi la selezione",
   "hotkey.read_fast": "Leggi la selezione, più veloce",
   "hotkey.ocr": "Leggi un'area dello schermo",

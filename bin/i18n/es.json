@@ -186,6 +186,7 @@
   "hotkeys.title": "Atajos de teclado",
   "hotkeys.unset": "Sin asignar",
   "hotkeys.press": "Pulsa una combinación…",
+  "hotkeys.reject": "Solo letras, cifras o teclas F",
   "hotkey.read": "Leer la selección",
   "hotkey.read_fast": "Leer la selección más rápido",
   "hotkey.ocr": "Leer una zona de la pantalla",

@@ -186,6 +186,7 @@
   "hotkeys.title": "Tastenkürzel",
   "hotkeys.unset": "Nicht belegt",
   "hotkeys.press": "Kombination drücken…",
+  "hotkeys.reject": "Nur Buchstaben, Ziffern oder F-Tasten",
   "hotkey.read": "Markierten Text vorlesen",
   "hotkey.read_fast": "Markierten Text schneller vorlesen",
   "hotkey.ocr": "Bildschirmbereich vorlesen",

@@ -186,6 +186,7 @@
   "hotkeys.title": "Raccourcis clavier",
   "hotkeys.unset": "Non défini",
   "hotkeys.press": "Appuie sur une combinaison…",
+  "hotkeys.reject": "Lettres, chiffres ou touches F uniquement",
   "hotkey.read": "Lire la sélection",
   "hotkey.read_fast": "Lire la sélection, plus vite",
   "hotkey.ocr": "Lire une zone de l'écran",

@@ -487,10 +487,12 @@ class Backend(QObject):
     piperProgress = Signal(str, int, int)     # Piper download: lang, bytes done, bytes total
     piperDone = Signal(str, bool, str)        # lang, ok, voice name or error text
     rulesChanged = Signal()                    # rules.json changed (window, CLI, agent)
+    keyRecorded = Signal(str, str)             # key recorder: kind, value (win_keyrecorder)
 
     def __init__(self):
         super().__init__()
         self._rec = None
+        self._keyrec = None                    # win_keyrecorder.KeyRecorder, on demand
         self._rec_kind = "mic"
         self._pending = None
         self._rec_timer = QTimer(self)
@@ -778,16 +780,50 @@ class Backend(QObject):
         return tr("save.doneOnClose" if tts_platform.INPROC_HOTKEYS else "save.done")
 
     # --- Hotkeys --------------------------------------------------------- #
-    @Slot(int, int, result=str)
-    def keyCombo(self, key, mods):
-        """Key press from QML -> Qt portable text ('' for bare modifiers)."""
+    @Slot(int, int, int, result=str)
+    def keyCombo(self, key, mods, scancode=0):
+        """Key press from QML -> Qt portable text ('' for bare modifiers).
+        Fallback for when the key recorder (keyRecordStart) is not available.
+        On Windows the physical key decides, so AltGr layouts and Shift give
+        'Ctrl+Alt+E' and 'Ctrl+Shift+1' instead of '€' and '!'."""
         if key in (Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta,
                    Qt.Key_AltGr, Qt.Key_unknown):
             return ""
-        mods &= int(Qt.ShiftModifier | Qt.ControlModifier | Qt.AltModifier
-                    | Qt.MetaModifier)
+        # PySide6 6.12 dropped int() on flag enums, so mask with plain ints
+        wanted = {"Shift": Qt.ShiftModifier.value, "Ctrl": Qt.ControlModifier.value,
+                  "Alt": Qt.AltModifier.value, "Meta": Qt.MetaModifier.value}
+        mods &= sum(wanted.values())
+        if tts_platform.IS_WINDOWS and scancode:
+            import win_keyrecorder as kr
+            name = kr.vk_name(kr.scancode_to_vk(scancode))
+            if name:
+                return kr.combo_text({n for n, bit in wanted.items() if mods & bit}, name)
         combo = QKeyCombination(Qt.KeyboardModifier(mods), Qt.Key(key))
         return QKeySequence(combo).toString(QKeySequence.PortableText)
+
+    @Slot(result=int)
+    def keyRecordStart(self):
+        """Windows: record the next combination through a keyboard hook
+        (win_keyrecorder), reported by keyRecorded. Returns a token for
+        keyRecordStop, 0 if not available (QML then uses keyCombo)."""
+        if not tts_platform.IS_WINDOWS:
+            return 0
+        try:
+            if self._keyrec is None:
+                import win_keyrecorder
+                self._keyrec = win_keyrecorder.KeyRecorder(self._key_recorded)
+            return self._keyrec.start()
+        except Exception:
+            return 0
+
+    @Slot(int)
+    def keyRecordStop(self, token):
+        if self._keyrec is not None:
+            self._keyrec.stop(token)
+
+    def _key_recorded(self, kind, value):
+        # called inside the hook, which must return fast: emit afterwards
+        QTimer.singleShot(0, lambda: self.keyRecorded.emit(kind, value))
 
     @Slot(str, result=str)
     def hotkeyIssue(self, combo):
@@ -796,6 +832,8 @@ class Backend(QObject):
 
     @Slot(bool)
     def windowVisible(self, visible):
+        if not visible and self._keyrec is not None:
+            self._keyrec.stop()
         # While the window is open, global hotkeys are paused, otherwise
         # recording a combo would trigger its action (RegisterHotKey grabs it).
         if tts_platform.INPROC_HOTKEYS:

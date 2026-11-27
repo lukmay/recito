@@ -277,6 +277,24 @@ ApplicationWindow {
         return info ? "load" : "play"
     }
 
+    // --- Hotkeys: problems shown next to a field ---
+    property int hotkeyTick: 0                    // bumped on every change, re-evaluates the checks
+    // '' | 'dup:<action>' | 'noModifier' | 'taken'
+    function hotkeyIssue(j, combo, check, tick) {
+        if (!combo) return ""
+        for (var i = 0; i < init.hotkeys.length; i++) {
+            var other = hotkeyRepeater.itemAt(i)
+            if (i !== j && other && other.combo.toLowerCase() === combo.toLowerCase())
+                return "dup:" + init.hotkeys[i].action
+        }
+        return check
+    }
+    function hotkeyIssueText(issue) {
+        if (!issue) return ""
+        if (issue.indexOf("dup:") === 0) return Tr.t("onb.keys.dup", { action: Tr.t("hotkey." + issue.slice(4)) })
+        return Tr.t("onb.keys." + issue)
+    }
+
     function save(silent) {
         var keys = {}
         for (var j = 0; j < init.hotkeys.length; j++)
@@ -333,8 +351,11 @@ ApplicationWindow {
         if (r.speed) { speedNormal.setValue(r.speed); speedFast.setValue(r.speed * 0.8) }
         if (r.hotkeys)
             for (var j = 0; j < init.hotkeys.length; j++)
-                if (r.hotkeys[init.hotkeys[j].action] !== undefined)
+                if (r.hotkeys[init.hotkeys[j].action] !== undefined) {
                     hotkeyRepeater.itemAt(j).combo = r.hotkeys[init.hotkeys[j].action]
+                    hotkeyRepeater.itemAt(j).check = ""
+                }
+        hotkeyTick++
     }
 
     onVisibleChanged: backend.windowVisible(visible)
@@ -1396,6 +1417,8 @@ ApplicationWindow {
                                 required property var modelData
                                 required property int index
                                 property string combo: modelData.combo
+                                property string check: ""      // backend.hotkeyIssue() of a recorded combo
+                                readonly property string issue: win.hotkeyIssue(hk.index, hk.combo, hk.check, win.hotkeyTick)
                                 Layout.fillWidth: true; spacing: 0
                                 Divider { visible: hk.index > 0 }
                                 RowLayout {
@@ -1414,12 +1437,19 @@ ApplicationWindow {
                                         }
                                         Small { visible: betaChip.visible; text: Tr.t("beta.reader")
                                                 Layout.fillWidth: true }
+                                        Small { visible: hk.issue !== ""; text: win.hotkeyIssueText(hk.issue)
+                                                color: Theme.error; Layout.fillWidth: true }
                                     }
                                     HotkeyField {
                                         Layout.preferredWidth: 260; Layout.preferredHeight: 48
                                         combo: hk.combo
                                         label: Tr.t("hotkey." + hk.modelData.action)
-                                        onRecorded: (c) => hk.combo = c
+                                        invalid: hk.issue !== ""
+                                        onRecorded: (c) => {
+                                            hk.check = c ? backend.hotkeyIssue(c) : ""
+                                            hk.combo = c
+                                            win.hotkeyTick++
+                                        }
                                     }
                                 }
                             }

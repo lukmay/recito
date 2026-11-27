@@ -186,6 +186,7 @@
   "hotkeys.title": "Keyboard shortcuts",
   "hotkeys.unset": "Not set",
   "hotkeys.press": "Press a combination…",
+  "hotkeys.reject": "Letters, digits or F keys only",
   "hotkey.read": "Read selection aloud",
   "hotkey.read_fast": "Read selection, faster",
   "hotkey.ocr": "Read a screen area",

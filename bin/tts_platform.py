@@ -508,7 +508,8 @@ def _kbd_to_qt(combo: str) -> str:
     if not combo:
         return ""
     name = {"ctrl": "Ctrl", "control": "Ctrl", "alt": "Alt", "shift": "Shift",
-            "windows": "Meta", "win": "Meta", "cmd": "Meta", "esc": "Esc"}
+            "windows": "Meta", "win": "Meta", "cmd": "Meta", "esc": "Esc",
+            "pgup": "PgUp", "pgdown": "PgDown"}
     out = []
     for tok in combo.replace(" ", "").split("+"):
         if not tok:

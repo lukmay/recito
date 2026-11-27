@@ -192,7 +192,7 @@ function Install-Recito {
                         'tts_filters.py', 'tts_rules.py', 'tts_platform.py', 'tts_theme.py', 'tts_config.py',
                         'tts_elevenlabs.py', 'tts_settings.py', 'tts_settings.qml', 'tts_reader.py',
                         'win_autostart.py', 'tts_neural.py', 'tts_voices.py', 'tts_i18n.py', 'tts_langs.py',
-                        'win_hotkeys.py', 'win_ocr.py', 'win_sapi.py', 'tts_previews.py', 'tts_icons.py', 'tts_audio.py',
+                        'win_hotkeys.py', 'win_keyrecorder.py', 'win_ocr.py', 'win_sapi.py', 'tts_previews.py', 'tts_icons.py', 'tts_audio.py',
                         'tts_timing.py', 'tts_follow.py') {
             Copy-Item (Join-Path $Repo "bin\$f") (Join-Path $BinDir $f) -Force
         }
