@@ -6,6 +6,13 @@ Each release has a section here. The section of the version in `VERSION` becomes
 
 Shortcuts can be set again on Windows, and the read shortcuts now copy the selection in more apps.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/lukmay/recito/61016ace81335381f0d7606bf93492a93abec4ae/docs/images/shortcuts-dark.webp">
+    <img src="https://raw.githubusercontent.com/lukmay/recito/61016ace81335381f0d7606bf93492a93abec4ae/docs/images/shortcuts-light.webp" alt="The shortcuts page while a field records Ctrl+Alt and two actions share Ctrl+Alt+P" width="720">
+  </picture>
+</p>
+
 - The shortcut fields in the settings window recorded nothing. PySide6 6.12, the Qt library Recito runs on, changed how it hands over modifier keys, so every key press failed. On Windows the fields now take the physical keys from the keyboard before any program gets them. `Ctrl+Alt+E` therefore stays `Ctrl+Alt+E` on keyboard layouts where it types a euro sign, and a combination that another program has taken can be recorded as well.
 - While you hold modifier keys, the field displays them. Once the combination is complete, the field keeps it and stops listening. A key that cannot be a shortcut, such as a comma or an umlaut, gets a short note in the field.
 - Next to a conflicting shortcut, the settings window now shows a red note. It names the other action when two actions share a shortcut, and it warns when another program has taken the shortcut.
