@@ -2,6 +2,15 @@
 
 Each release has a section here. The section of the version in `VERSION` becomes part of the release notes on GitHub.
 
+## 1.2.2
+
+Shortcuts can be set again on Windows, and the read shortcuts now copy the selection in more apps.
+
+- The shortcut fields in the settings window recorded nothing. PySide6 6.12, the Qt library Recito runs on, changed how it hands over modifier keys, so every key press failed. On Windows the fields now take the physical keys from the keyboard before any program gets them. `Ctrl+Alt+E` therefore stays `Ctrl+Alt+E` on keyboard layouts where it types a euro sign, and a combination that another program has taken can be recorded as well.
+- While you hold modifier keys, the field displays them. Once the combination is complete, the field keeps it and stops listening. A key that cannot be a shortcut, such as a comma or an umlaut, gets a short note in the field.
+- Next to a conflicting shortcut, the settings window now shows a red note. It names the other action when two actions share a shortcut, and it warns when another program has taken the shortcut.
+- To get the selection, Recito copies it with `Ctrl+C`. Browsers, VS Code and Electron apps often missed that copy, so Recito answered that nothing was selected. Recito now waits until you release the shortcut and gives the app up to a second. It tries `Ctrl+Insert` when `Ctrl+C` copies nothing, and it checks the clipboard again while the app is still writing to it. The shortcuts for reading aloud and for ElevenReader, the reading app that Recito can send text to, both copy the selection this way.
+
 ## 1.2.1
 
 The follow-along window gets an adjustable text size and two fixes.
