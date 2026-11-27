@@ -273,41 +273,66 @@ def _clip_text():
         return ""
 
 
-def _grab_selection_windows(timeout=0.45):
+def _grab_selection_windows(timeout=1.0):
     """Selected text in the foreground window, via a synthetic Ctrl+C.
 
     Windows has no PRIMARY selection. The clipboard is restored afterwards. If
     nothing is selected (clipboard unchanged), returns the current clipboard so
-    copied text is still read."""
+    copied text is still read.
+
+    Steps that make it hold up in slow apps (browsers, Electron, VS Code):
+    wait until the hotkey's keys are physically up, so the app sees a clean
+    Ctrl+C and not Ctrl+Alt+C or an auto-repeated letter; give the app up to a
+    second to fill the clipboard; try Ctrl+Insert if Ctrl+C did nothing; and
+    read the text again while the app still holds the clipboard open."""
     import ctypes
     import time
     u = ctypes.windll.user32
     KEYUP = 0x0002
     SCAN = 0x0008
-    SC_CTRL, SC_C = 0x1D, 0x2E               # scan codes Ctrl, C
-    # Modifiers the hotkey may still hold. Release only keys that are actually
-    # down, otherwise Ctrl+C becomes Ctrl+Alt+C; a lone Alt-up triggers nothing.
-    HELD = (0x12, 0xA5, 0x11, 0xA2, 0xA3, 0x10, 0x5B, 0x5C)  # Alt,AltGr,Ctrl,LCtrl,RCtrl,Shift,LWin,RWin
+    SC_CTRL, SC_C, SC_INS = 0x1D, 0x2E, 0x52            # scan codes Ctrl, C, Insert
+    EXT = 0x0001                                        # Insert is an extended key
+    MODS = (0x12, 0xA4, 0xA5, 0x11, 0xA2, 0xA3, 0x10, 0xA0, 0xA1, 0x5B, 0x5C)
+    keys = [vk for vk in range(0x08, 0xFF) if vk not in (0x01, 0x02, 0x04, 0x05, 0x06)]
+
+    def held():
+        return [vk for vk in keys if u.GetAsyncKeyState(vk) & 0x8000]
+
     old = _clip_text()
-    for vk in HELD:
+    # Let the user release the hotkey (normally well under 0.3 s)
+    end = time.time() + 0.8
+    while held() and time.time() < end:
+        time.sleep(0.01)
+    # Still held: release the modifiers on the app's side, only keys that are
+    # down, otherwise Ctrl+C becomes Ctrl+Alt+C; a lone Alt-up triggers nothing.
+    for vk in MODS:
         if u.GetAsyncKeyState(vk) & 0x8000:
             u.keybd_event(vk, 0, KEYUP, 0)
     time.sleep(0.02)
-    seq = u.GetClipboardSequenceNumber()
-    u.keybd_event(0, SC_CTRL, SCAN, 0)       # Ctrl+C via scan codes
-    u.keybd_event(0, SC_C, SCAN, 0)
-    u.keybd_event(0, SC_C, SCAN | KEYUP, 0)
-    u.keybd_event(0, SC_CTRL, SCAN | KEYUP, 0)
-    changed = False
-    end = time.time() + timeout
-    while time.time() < end:
-        if u.GetClipboardSequenceNumber() != seq:
-            changed = True
-            break
-        time.sleep(0.02)
-    if not changed:
+
+    def copy(sc, flags, wait):
+        seq = u.GetClipboardSequenceNumber()
+        u.keybd_event(0, SC_CTRL, SCAN, 0)
+        u.keybd_event(0, sc, SCAN | flags, 0)
+        u.keybd_event(0, sc, SCAN | flags | KEYUP, 0)
+        u.keybd_event(0, SC_CTRL, SCAN | KEYUP, 0)
+        stop = time.time() + wait
+        while time.time() < stop:
+            if u.GetClipboardSequenceNumber() != seq:
+                return True
+            time.sleep(0.02)
+        return False
+
+    if not (copy(SC_C, 0, timeout) or copy(SC_INS, EXT, timeout / 2)):
         return old                          # nothing selected: clipboard
-    sel = _clip_text()
+    # The sequence number moves when the app empties the clipboard, which can
+    # be before the text is in it, and the app may still hold it open.
+    sel, stop = "", time.time() + 0.5
+    while True:
+        sel = _clip_text()
+        if sel.strip() or time.time() > stop:
+            break
+        time.sleep(0.03)
     try:
         import pyperclip
         pyperclip.copy(old)                 # restore previous clipboard
